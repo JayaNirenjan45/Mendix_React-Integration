@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Bahri</title>
+
+    <!--
+      Vendor stylesheets copied verbatim out of the Mendix deployment folder.
+      Load order mirrors exactly what the Mendix client injects at runtime:
+        1. widgets/widgets.css      (pluggable + custom widget styles: slick carousel, combobox, attendance card)
+        2. theme.compiled.css       (compiled Atlas core + Bootstrap base + the app theme)
+        3. RadiobuttonList.css      (com.tgict.widget.web.radiobuttonlist)
+      They are served from /public so their own relative url() references keep resolving.
+      src/styles/gs-bahri/atom-gs.scss is imported by main.jsx and therefore lands last.
+    -->
+    <link rel="stylesheet" href="/mx-theme/widgets/widgets.css" />
+    <link rel="stylesheet" href="/mx-theme/theme.compiled.css" />
+    <link rel="stylesheet" href="/mx-theme/RadiobuttonList.css" />
+  </head>
+  <!-- body classes copied 1:1 from the running Mendix client -->
+  <body class="web-theme-cyan profile-desktop role-employee">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

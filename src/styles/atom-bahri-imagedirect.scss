@@ -1,0 +1,12 @@
+// Background images for the dashboard, as declared at the end of the Mendix
+// theme/web/atom-bahri-imagedirect.scss. The SVGs sit next to this file, as they
+// do in Mendix. Load this before atom-gs.scss (see main.jsx): the `background`
+// shorthand resets position, repeat and size, which atom-gs.scss then sets.
+
+.gs-bahri-layout .empofthe-mnth {
+  background: url(EmployeeOfMonth.svg);
+}
+
+.gs-bahri-layout .gs-celeb-events .gs-celeb-event {
+  background-image: url(bdaycontainer.svg);
+}

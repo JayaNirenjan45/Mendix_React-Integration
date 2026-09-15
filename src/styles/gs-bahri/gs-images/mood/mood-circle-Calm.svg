@@ -1,0 +1,21 @@
+<svg width="151" height="151" viewBox="0 0 151 151" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g filter="url(#filter0_d_mood_calm)">
+<rect x="23.1602" y="11.5801" width="104.221" height="104.221" rx="52.1105" fill="#4CD137" shape-rendering="crispEdges"/>
+<rect x="25.3314" y="13.7513" width="99.8784" height="99.8784" rx="49.9392" stroke="white" stroke-width="4.34254" shape-rendering="crispEdges"/>
+<circle cx="75.1615" cy="63.5802" r="39" stroke="white" stroke-width="8.6667"/>
+<path d="M53.9 53.2C57.3 58.4 63.3 58.4 66.7 53.2M83.6 53.2C87 58.4 93 58.4 96.4 53.2" stroke="white" stroke-width="6.5" stroke-linecap="round"/>
+<path d="M58.8 74.6C67.6 85.4 82.7 85.4 91.5 74.6" stroke="white" stroke-width="6.5" stroke-linecap="round"/>
+</g>
+<defs>
+<filter id="filter0_d_mood_calm" x="-6.48499e-05" y="-3.24249e-05" width="150.543" height="150.541" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="11.5801"/>
+<feGaussianBlur stdDeviation="11.5801"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.172549 0 0 0 0 0.207843 0 0 0 0 0.192157 0 0 0 0.101961 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_mood_calm"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_mood_calm" result="shape"/>
+</filter>
+</defs>
+</svg>

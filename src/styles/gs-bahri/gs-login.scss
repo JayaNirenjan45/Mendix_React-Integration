@@ -1,0 +1,268 @@
+// =============================================================================
+//  gs-bahri — sign-in screen
+//  Scoped entirely under .gs-login-page so it can never leak into the dashboard.
+//  Palette and type ramp are the ones atom-gs.scss already uses:
+//    #0A5D8F deep blue, #00A9CE Bahri cyan, #0F1729 ink, #F0F4F8 surface.
+// =============================================================================
+
+.gs-login-page {
+    --gs-login-ink: #0f1729;
+    --gs-login-muted: #64748b;
+    --gs-login-blue: #0a5d8f;
+    --gs-login-cyan: #00a9ce;
+    --gs-login-navy: #1a2b4a;
+    --gs-login-surface: #ffffff;
+    --gs-login-line: #e5e7eb;
+
+    min-height: 100vh;
+    display: flex;
+    align-items: stretch;
+    background: #f0f4f8;
+    font-family: 'Inter', sans-serif;
+    color: var(--gs-login-ink);
+}
+
+.gs-login-shell {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 100vh;
+}
+
+// ------------------------------------------------------------- left / brand
+.gs-login-brand {
+    flex: 1 1 52%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 56px;
+    color: #ffffff;
+    background:
+        radial-gradient(120% 100% at 100% 0%, rgba(0, 169, 206, 0.55) 0%, rgba(0, 169, 206, 0) 55%),
+        linear-gradient(150deg, var(--gs-login-navy) 0%, var(--gs-login-blue) 100%);
+}
+
+.gs-login-brand-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gs-login-brand-logo {
+    // The mark is a #2E83AE rounded tile with the Bahri glyph knocked out of
+    // it, so it is left at its own colours: inverting it flattens the glyph.
+    height: 44px;
+    width: auto;
+}
+
+.gs-login-wordmark {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.gs-login-brand-copy {
+    max-width: 520px;
+}
+
+.gs-login-brand-title {
+    margin: 0 0 16px;
+    font-size: 46px;
+    line-height: 1.12;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.gs-login-brand-sub {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.gs-login-brand-foot-text {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+// ------------------------------------------------------------- right / form
+.gs-login-panel {
+    flex: 1 1 48%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    background: var(--gs-login-surface);
+}
+
+.gs-login-form {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.gs-login-form-head {
+    margin-bottom: 4px;
+}
+
+.gs-login-title {
+    margin: 0 0 6px;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--gs-login-ink);
+}
+
+.gs-login-subtitle {
+    margin: 0;
+    font-size: 15px;
+    color: var(--gs-login-muted);
+}
+
+.gs-login-error {
+    padding: 11px 14px;
+    border: 1px solid #f2c4c4;
+    border-left: 3px solid #c0392b;
+    border-radius: 6px;
+    background: #fdf1f0;
+    color: #97281c;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.gs-login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin: 0;
+}
+
+.gs-login-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gs-login-ink);
+}
+
+.gs-login-input-wrap {
+    position: relative;
+    display: block;
+}
+
+// `.form-control` comes from the Atlas/Bootstrap stylesheet the page already
+// loads; these rules only retune it for this screen.
+.gs-login-page .gs-login-input {
+    // Atlas's .form-control carries `flex: 1 1 0%`, which collapses the input
+    // to nothing when it is a direct flex item of .gs-login-field. Opt out of
+    // flexing so the fixed height below is what actually renders.
+    flex: 0 0 auto;
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid var(--gs-login-line);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: none;
+    font-size: 15px;
+    color: var(--gs-login-ink);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus {
+        outline: none;
+        border-color: var(--gs-login-cyan);
+        box-shadow: 0 0 0 3px rgba(0, 169, 206, 0.18);
+    }
+
+    &:disabled {
+        background: #f8fafc;
+        color: var(--gs-login-muted);
+    }
+}
+
+.gs-login-input-wrap .gs-login-input {
+    padding-right: 62px;
+}
+
+.gs-login-reveal {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    padding: 4px 6px;
+    border: 0;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gs-login-blue);
+    cursor: pointer;
+
+    &:hover {
+        color: var(--gs-login-cyan);
+    }
+}
+
+.gs-login-page .gs-login-submit {
+    height: 46px;
+    margin-top: 4px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--gs-login-blue) 0%, var(--gs-login-cyan) 100%);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s ease, opacity 0.15s ease;
+
+    &:hover:not(:disabled) {
+        filter: brightness(1.07);
+    }
+
+    &:disabled {
+        opacity: 0.65;
+        cursor: default;
+    }
+}
+
+.gs-login-help {
+    margin: 0;
+    font-size: 13px;
+    color: var(--gs-login-muted);
+}
+
+// ------------------------------------------------------------------ booting
+// Shown while bootstrapSession() decides whether the session behind the cookie
+// can be adopted, so the login form never flashes on a refresh.
+.gs-login-booting {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f4f8;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: #64748b;
+}
+
+// --------------------------------------------------------------- responsive
+@media (max-width: 900px) {
+    .gs-login-shell {
+        flex-direction: column;
+    }
+
+    .gs-login-brand {
+        flex: 0 0 auto;
+        gap: 28px;
+        padding: 32px 24px;
+    }
+
+    .gs-login-brand-title {
+        font-size: 32px;
+    }
+
+    .gs-login-brand-foot {
+        display: none;
+    }
+
+    .gs-login-panel {
+        padding: 32px 24px 48px;
+    }
+}

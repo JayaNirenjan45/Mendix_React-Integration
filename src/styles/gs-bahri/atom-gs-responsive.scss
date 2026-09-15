@@ -1,0 +1,1457 @@
+// =============================================================================
+//  atom-gs-responsive.scss
+//
+//  Responsive layer for the Bahri dashboard. Loaded AFTER atom-gs.scss, which is
+//  never edited. Everything here is scoped under .gs-bahri-layout and mirrors the
+//  nesting depth atom-gs.scss uses, so these rules match or beat its specificity
+//  and win on source order.
+//
+//  Two kinds of breakpoint are used, because two different things narrow the page.
+//
+//  Viewport (@media) — the page frame and the device modes
+//    mobile            <= 767px    header, sidebar strip, paddings, font sizes
+//    tablet     768px .. 1023px    header, paddings, font sizes
+//    desktop   1024px .. 1919px    content-area padding
+//
+//  Content width (@container gs-content) — the dashboard rows
+//    The rows care about the width of .gs-content-area, not the window. On a
+//    desktop that width shrinks for two reasons: browser zoom, and expanding the
+//    sidebar from 113px to 385px. Container queries react to both the same way.
+//      fluid     content <= 1693px   rows wrap on pixel bases and min-widths
+//      stack     content <=  839px   the two rails and the celebrations row stack
+//      narrow    content <=  580px   single-column rows (tablet with sidebar open)
+//
+//  Font sizes are only touched inside the mobile and tablet queries. The desktop
+//  and container sections change layout constraints only.
+// =============================================================================
+
+$mobile-max: 767px;
+$tablet-min: 768px;
+$tablet-max: 1023px;
+$desktop-min: 1024px;
+// 1920px is the width atom-gs.scss was designed against, and it is the first
+// width where every row has room. The fluid band therefore stops just below it,
+// which leaves 1920 at 100% and at 80% zoom (2400px) exactly as the baseline.
+$fluid-max: 1919px;
+
+// Content-box width of .gs-content-area at a 1919px viewport with the sidebar
+// collapsed (1904 - 113 sidebar - 98 padding). With the sidebar collapsed, the
+// container tiers therefore switch at exactly the same widths as the viewport
+// band did, so nothing already verified moves.
+$cq-fluid-max: 1693px;
+// At a 1024px viewport the content box is 840px wide and the rails still sit side
+// by side. Stacking below that is only ever reached with the sidebar expanded.
+$cq-stack-max: 839px;
+// A collapsed tablet never goes below 600px of content; only an expanded sidebar
+// on a tablet or a small desktop gets this narrow.
+$cq-narrow-max: 580px;
+
+@mixin mobile {
+    @media (max-width: $mobile-max) {
+        @content;
+    }
+}
+
+@mixin tablet {
+    @media (min-width: $tablet-min) and (max-width: $tablet-max) {
+        @content;
+    }
+}
+
+// mobile + tablet, for rules the two share
+@mixin handheld {
+    @media (max-width: $tablet-max) {
+        @content;
+    }
+}
+
+@mixin fluid-desktop {
+    @media (min-width: $desktop-min) and (max-width: $fluid-max) {
+        @content;
+    }
+}
+
+// =============================================================================
+//  0. Global guards — every viewport
+// =============================================================================
+
+.gs-bahri-layout {
+    // `clip` rather than `hidden`: it stops stray overflow from producing a
+    // horizontal scrollbar without creating a scroll container, so the sticky
+    // header, ticker and sidebar keep working.
+    overflow-x: clip;
+    max-width: 100%;
+
+    // Media never forces a container wider than itself, at any zoom level.
+    img,
+    svg {
+        max-width: 100%;
+    }
+
+    // Flex children default to min-width:auto, which is what lets a long word or
+    // a fixed-width child push a row wider than its parent. Neutralising it on
+    // the main rails is what keeps zoomed-in desktop free of horizontal scroll.
+    .gs-main-layout,
+    .gs-content-area,
+    .three-nine-lay,
+    .left-lay,
+    .right-lay {
+        min-width: 0;
+    }
+
+    // The content area is the query container for every row rule below. It is a
+    // flex item that grows into the space beside the sidebar (or stretches to
+    // full width on mobile), so its width never depends on its own content and
+    // inline-size containment leaves the layout unchanged.
+    .gs-main-layout {
+        .gs-content-area {
+            container: gs-content / inline-size;
+        }
+    }
+}
+
+// =============================================================================
+//  Row rule sets, applied by the container tiers further down
+// =============================================================================
+
+// ---------------------------------------------------------------- fluid tier
+//  Two flexbox rules drive these.
+//   - With flex-wrap:wrap, lines are broken on each item's hypothetical size
+//     (flex-basis clamped by min/max) BEFORE flex-shrink runs. A row whose bases
+//     already sum to 100% will therefore wrap the moment a gap exists, so every
+//     row given wrap here also gets a pixel flex-basis that leaves room for it.
+//   - flex-basis:0 with proportional flex-grow keeps a ratio intact while
+//     min-width still decides when the row must break.
+@mixin rows-fluid {
+
+    // 3 / 9 split. The 64px gutter is the first thing worth giving back.
+    // Deliberately no wrap: the 30% / 70% max-widths already sum to 100%, so
+    // wrapping would drop the right rail below the left one.
+    .three-nine-lay {
+        gap: clamp(24px, 3.4vw, 64px);
+
+        // 30% of a narrow content area leaves the left rail too tight for the
+        // calendar. The floor only bites where 30% would fall under 320px.
+        .left-lay {
+            min-width: 320px;
+        }
+    }
+
+    // Latest News. Three cards that otherwise shrink past legibility.
+    .new-top {
+        flex-wrap: wrap;
+
+        .in-ln {
+            flex: 1 1 220px;
+            min-width: 200px;
+        }
+    }
+
+    .gs-main-layout {
+        .gs-content-area {
+
+            // Quick Links + Resources + Employee of the Month.
+            .gs-links-row {
+                flex-wrap: wrap;
+                // clamp tops out at the atom-gs value, so the widest end of the
+                // band keeps the baseline gutter.
+                gap: clamp(16px, 1.6vw, 28px);
+
+                // 330px is the narrowest card that still holds two tiles with
+                // captions on two lines. Below that the row wraps to 2 + 1 rather
+                // than keeping three cramped columns. (300px was enough with the
+                // sidebar collapsed, but an expanded sidebar at 1920 leaves three
+                // cards at ~313px with 124px tiles, the squeeze in the report.)
+                .gs-links-card {
+                    flex: 1 1 330px;
+                    min-width: 330px;
+                }
+
+                // Once the row wraps, Employee of the Month sits on a line of its
+                // own. atom-gs caps it at 380px, which left it stranded beside an
+                // empty gap; lifting the cap lets it take the full width. While it
+                // still shares a line it grows no wider than the two cards beside it.
+                .empofthe-mnth {
+                    flex: 1 1 330px;
+                    min-width: 330px;
+                    max-width: none;
+                }
+
+                // The card body already wraps. This floor decides whether the tiles
+                // stay 2-up or drop to 1-up: below ~124px the caption breaks onto
+                // three lines and the tile turns into a tall thin column.
+                .gs-link-tile,
+                .gs-res-tile {
+                    min-width: 124px;
+                }
+            }
+
+            .gs-services-row {
+                flex-wrap: wrap;
+                gap: 14px;
+
+                .gs-services-panel {
+                    flex: 1 1 320px;
+                    min-width: 320px;
+                }
+
+                .gs-services-list {
+                    flex-wrap: wrap;
+
+                    .gs-service-tile {
+                        flex: 1 1 200px;
+                        min-width: 200px;
+                    }
+                }
+            }
+
+            // basis 0 + grow 66/34 preserves the baseline ratio; the min-widths
+            // are what force the break when it no longer fits.
+            .gs-celebrations-row {
+                flex-wrap: wrap;
+                gap: clamp(18px, 1.6vw, 28px);
+
+                .gs-celebrations-card {
+                    flex: 66 1 0%;
+                    min-width: 520px;
+                }
+
+                .gs-engage-col {
+                    flex: 34 1 0%;
+                    min-width: 300px;
+                }
+            }
+        }
+    }
+
+    // The eight celebration tiles are a fixed 76 x 400 each, 790px in total.
+    // Wrapping them would produce an 800px-tall block, so the row scrolls sideways
+    // inside its own card. No scrollbar shows while they fit.
+    .gs-celeb-events {
+        gap: clamp(12px, 1.4vw, 26px);
+        overflow-x: auto;
+        justify-content: flex-start;
+        scrollbar-width: thin;
+
+        .gs-celeb-event {
+            flex: 0 0 auto;
+        }
+    }
+
+    .organization-carousel {
+        flex-wrap: wrap;
+        gap: clamp(12px, 1.1vw, 18px);
+
+        .organization-structure {
+            flex: 1 1 200px;
+            min-width: 200px;
+        }
+    }
+
+    .b-footer-top {
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .black-card {
+        gap: clamp(16px, 1.6vw, 24px);
+        padding: clamp(24px, 2.6vw, 38px) clamp(20px, 2.4vw, 36px);
+    }
+
+    .ceo-messagecard {
+        padding: clamp(24px, 2.6vw, 38px);
+    }
+}
+
+// --------------------------------------------------------- fixed-size widgets
+//  Three parts of atom-gs.scss are sized in absolute pixels that only add up at
+//  full width. Each one breaks out of its card as soon as the content narrows.
+@mixin fixed-widgets {
+
+    // 1. Celebration avatars.
+    // The <ul> is a nowrap flex row of 10 x 44px avatars with 44px gaps, a fixed
+    // 836px. The list is also a flex item with the default min-width:auto, so it
+    // cannot shrink and the last avatars escape the card and land on top of the
+    // Viva Engage column. Wrapping the row and letting the list shrink keeps them in.
+    .gs-celebrations-row {
+        .gs-celeb-people {
+            .gs-celeb-people-main {
+                gap: clamp(16px, 2.2vw, 44px);
+                flex-wrap: wrap;
+
+                .gs-celeb-people-list {
+                    min-width: 0;
+                    flex: 1 1 auto;
+
+                    ul {
+                        flex-wrap: wrap;
+                        gap: clamp(12px, 1.8vw, 44px);
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Employee of the Month.
+    // atom-gs.scss paints this card with EmployeeOfMonth.svg at `122% auto`. That
+    // only works for a card of roughly its own 380 x 460 shape:
+    //  - the blue panel inside the SVG stops short of the file's edges (a 10px
+    //    transparent margin on a 401 x 463 canvas), so `cover` leaves white strips
+    //    down the sides of a wide card;
+    //  - the SVG keeps its aspect ratio, so a non-uniform background-size
+    //    letterboxes it into a narrow column instead of stretching it.
+    // Below the baseline the card can be full width, so the panel is drawn in CSS
+    // instead: the SVG's own 15 gradient stops, and its 5%-opacity corner circle.
+    // At 131deg the gradient line on a 380 x 442 panel is 577 units long against
+    // the SVG's 576, starting from the same corner, so at the original shape the
+    // two are indistinguishable, and on any other shape it still fills the card.
+    .gs-main-layout {
+        .gs-content-area {
+            .gs-links-row {
+                .empofthe-mnth {
+                    background-image:
+                        radial-gradient(circle at calc(100% - 46px) -22px, rgba(255, 255, 255, 0.05) 128px, transparent 128.5px),
+                        linear-gradient(131deg,
+                            #0052CC 0%,
+                            #0055D3 7.14%,
+                            #0058DA 14.29%,
+                            #005AE2 21.43%,
+                            #005DE9 28.57%,
+                            #0060F0 35.71%,
+                            #0063F8 42.86%,
+                            #0066FF 50%,
+                            #0073F3 57.14%,
+                            #007DE7 64.29%,
+                            #0087DB 71.43%,
+                            #0090CE 78.57%,
+                            #0098C2 85.71%,
+                            #009FB4 92.86%,
+                            #00A6A6 100%);
+                    background-size: auto;
+                    background-position: 0 0;
+                    background-repeat: no-repeat;
+                }
+            }
+        }
+    }
+
+    // 3. Calendar grid.
+    // The 7 day columns are a rigid 46px and the today pill is pinned by min-width
+    // and max-width too, so the grid spills over the right-hand rail on a narrow
+    // desktop and past the card edge on a phone.
+    .calender-wrap {
+        .vc-days {
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+
+            .vc-day {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1 / 1;
+            }
+
+            .vc-day--today {
+                width: 100%;
+                min-width: 0;
+                max-width: none;
+                height: auto;
+                min-height: 0;
+                max-height: none;
+                aspect-ratio: 1 / 1;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------- stack tier
+@mixin rows-stack {
+    .three-nine-lay {
+        flex-direction: column;
+        gap: 24px;
+
+        .left-lay,
+        .right-lay {
+            max-width: 100%;
+            width: 100%;
+            min-width: 0;
+        }
+    }
+
+    .gs-main-layout {
+        .gs-content-area {
+            .gs-celebrations-row {
+                .gs-celebrations-card,
+                .gs-engage-col {
+                    flex: 1 1 100%;
+                    min-width: 0;
+                }
+            }
+        }
+    }
+
+    .b-footer-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+// ---------------------------------------------------------------- narrow tier
+@mixin rows-narrow {
+    .black-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .new-top {
+        .in-ln {
+            flex: 1 1 100%;
+        }
+    }
+
+    .gs-main-layout {
+        .gs-content-area {
+            .gs-links-row {
+                .gs-links-card,
+                .empofthe-mnth {
+                    flex: 1 1 100%;
+                    min-width: 0;
+                }
+            }
+
+            .gs-services-row {
+                .gs-services-panel {
+                    flex: 1 1 100%;
+                    min-width: 0;
+
+                    .gs-services-list {
+                        flex-direction: column;
+                    }
+                }
+            }
+        }
+    }
+
+    .organization-carousel {
+        .organization-structure {
+            flex: 1 1 100%;
+            min-width: 0;
+        }
+    }
+}
+
+// =============================================================================
+//  1. Desktop page padding — viewport band
+//
+//  Padding sits on the container itself, which a container query cannot style,
+//  so it stays a viewport rule. Browser zoom rescales the viewport: a 1920px
+//  screen reports 1536px at 125% and a 1366px screen reports 1092px.
+// =============================================================================
+
+@include fluid-desktop {
+    .gs-bahri-layout {
+        .gs-main-layout {
+            .gs-content-area {
+                padding: clamp(32px, 3.2vw, 60px) clamp(20px, 3.9vw, 74px) clamp(32px, 3.2vw, 60px) clamp(16px, 1.3vw, 24px);
+            }
+        }
+    }
+}
+
+// =============================================================================
+//  2. Desktop rows — container tiers (zoom 80% .. 125%, and the expanded sidebar)
+//
+//  Gated to desktop viewports so they never compete with the mobile and tablet
+//  rules below, which keep their own row layout.
+// =============================================================================
+
+@media (min-width: $desktop-min) {
+    @container gs-content (max-width: #{$cq-fluid-max}) {
+        .gs-bahri-layout {
+            @include rows-fluid;
+            @include fixed-widgets;
+        }
+    }
+
+    @container gs-content (max-width: #{$cq-stack-max}) {
+        .gs-bahri-layout {
+            @include rows-stack;
+        }
+    }
+}
+
+// =============================================================================
+//  3. Mobile + tablet — shared structure
+// =============================================================================
+
+@include handheld {
+    .gs-bahri-layout {
+        @include fixed-widgets;
+
+        // --------------------------------------------------------- header
+        .gs-header {
+
+            // The action cluster is 602px wide and is the one element that
+            // forces a horizontal scrollbar below 1024px. Dropping the name /
+            // role text and tightening the gaps reclaims enough width; every
+            // interactive icon stays.
+            .gs-header-actions {
+                gap: 16px;
+                min-width: 0;
+
+                .gs-header-user {
+                    .gs-header-user-meta {
+                        display: none;
+                    }
+                }
+            }
+        }
+
+        // ------------------------------------------------- content padding
+        .gs-main-layout {
+            .gs-content-area {
+                padding: 24px 20px;
+                // atom-gs pins this to height:100% with overflow:auto, which
+                // traps the page in a nested scroller on small screens.
+                height: auto;
+                overflow: visible;
+            }
+        }
+
+        // ------------------------------------------------- stack the rails
+        .three-nine-lay {
+            flex-direction: column;
+            gap: 24px;
+
+            .left-lay,
+            .right-lay {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+
+        .new-top {
+            flex-wrap: wrap;
+            gap: 14px;
+
+            .in-ln {
+                flex: 1 1 260px;
+                min-width: 0;
+            }
+        }
+
+        .gs-main-layout {
+            .gs-content-area {
+
+                .gs-links-row {
+                    flex-wrap: wrap;
+                    gap: 16px;
+
+                    .gs-links-card {
+                        flex: 1 1 260px;
+                        min-width: 0;
+                    }
+
+                    .empofthe-mnth {
+                        flex: 1 1 260px;
+                        min-width: 0;
+                        max-width: 100%;
+                    }
+                }
+
+                .gs-services-row {
+                    flex-wrap: wrap;
+                    gap: 16px;
+
+                    .gs-services-panel {
+                        flex: 1 1 280px;
+                        min-width: 0;
+                    }
+                }
+
+                .gs-celebrations-row {
+                    flex-wrap: wrap;
+                    gap: 20px;
+
+                    .gs-celebrations-card,
+                    .gs-engage-col {
+                        flex: 1 1 100%;
+                        min-width: 0;
+                    }
+                }
+
+                .gs-approvals-card {
+                    padding: 20px;
+
+                    .gs-approvals-head {
+                        margin: -46px 0 20px 64px;
+                    }
+                }
+            }
+        }
+
+        // Fixed-size celebration tiles: scroll rather than squeeze.
+        .gs-celeb-events {
+            gap: 12px;
+            overflow-x: auto;
+            justify-content: flex-start;
+            -webkit-overflow-scrolling: touch;
+
+            .gs-celeb-event {
+                flex: 0 0 auto;
+            }
+        }
+
+        .organization-carousel {
+            flex-wrap: wrap;
+            gap: 14px;
+
+            .organization-structure {
+                flex: 1 1 220px;
+                padding: 20px 16px;
+            }
+        }
+
+        .b-footer-top {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 24px;
+            padding: 24px;
+            margin-top: 40px;
+        }
+
+    }
+}
+
+// =============================================================================
+//  4. Tablet 768px .. 1023px
+// =============================================================================
+
+@include tablet {
+    .gs-bahri-layout {
+
+        .gs-header {
+            padding: 0 24px;
+
+            .gs-header-actions {
+                gap: 20px;
+            }
+        }
+
+        .gs-main-layout {
+            .top-sidebar-left {
+                padding: 24px 0 0 2px;
+            }
+        }
+
+        .black-card {
+            padding: 28px 24px;
+            gap: 20px;
+        }
+
+        .ceo-messagecard {
+            padding: 28px;
+        }
+
+        // ------------------------------------------- font sizes (tablet only)
+        .ceo-messagecard {
+            .ceo-subheading {
+                font-size: 30px;
+            }
+
+            .message-content {
+                font-size: 16px;
+            }
+        }
+
+        .lates-newss {
+            .ln--header-txt {
+                font-size: 19px;
+            }
+        }
+
+        .calender-card.common-section-gap {
+            .text-employee.dashboard-sub-headings {
+                font-size: 22px;
+            }
+        }
+
+        .gs-main-layout {
+            .gs-content-area {
+                .gs-services-row {
+                    .gs-services-panel {
+                        .gs-services-panel__title {
+                            font-size: 24px;
+                        }
+                    }
+                }
+
+                .gs-celebrations-row {
+                    .gs-celebrations-card {
+                        .gs-celeb-head {
+                            .gs-celeb-head-title {
+                                font-size: 22px;
+                            }
+                        }
+                    }
+                }
+
+                .gs-approvals-card {
+                    .gs-approvals-tabs {
+                        >ul {
+                            >li {
+                                >a {
+                                    font-size: 15px;
+                                    padding: 9px 18px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .organization-carousel {
+            .organization-structure {
+                .mx-text {
+                    font-size: 19px;
+                }
+            }
+        }
+
+        .gs-celeb-events {
+            .gs-celeb-event {
+                .mx-text {
+                    font-size: 21px;
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
+//  5. Mobile <= 767px
+// =============================================================================
+
+@include mobile {
+    .gs-bahri-layout {
+
+        // ------------------------------------------------------------ header
+        // Shorter bar, so the two sticky offsets below it move up with it.
+        .gs-header {
+            height: 64px;
+            padding: 0 12px;
+            gap: 10px;
+
+            .gs-header-brand {
+                min-width: 0;
+
+                .gs-header-logo {
+                    width: 40px;
+                    height: 40px;
+                }
+
+                .gs-header-wordmark {
+                    font-size: 18px;
+                }
+            }
+
+            .gs-header-actions {
+                gap: 10px;
+
+                .gs-header-weather {
+                    height: 40px;
+                    padding: 0 12px;
+                    gap: 6px;
+
+                    .gs-header-weather-city {
+                        display: none;
+                    }
+
+                    .gs-header-weather-temp {
+                        font-size: 13px;
+                    }
+
+                    .gs-header-weather-icon {
+                        width: 18px;
+                        height: 18px;
+                    }
+                }
+
+                .gs-header-user {
+                    .gs-header-avatar {
+                        width: 36px;
+                        height: 36px;
+
+                        .gs-header-initials {
+                            font-size: 14px;
+                        }
+                    }
+                }
+            }
+        }
+
+        .gs-header-black-frame {
+            top: 64px;
+            height: 34px;
+
+            .gs-ticker-track {
+                .gs-ticker-group {
+                    .gs-ticker-item {
+                        font-size: 13px;
+                    }
+                }
+            }
+        }
+
+        // ----------------------------------------------------------- sidebar
+        // The 113px rail becomes a horizontal icon strip above the content.
+        .gs-main-layout {
+            flex-direction: column;
+
+            .top-sidebar-left {
+                position: static;
+                flex-direction: row;
+                align-items: center;
+                // Full width through stretch, not `width: 100%`. atom-gs animates
+                // this element's width for the expand toggle, and 100% -> 113px is
+                // interpolable, so leaving mobile would slide the sidebar from full
+                // width down to 113px, shoving the content off-screen as it went.
+                // `auto` is not animatable, so a breakpoint change is instant.
+                width: auto;
+                align-self: stretch;
+                padding: 10px 12px 0;
+
+                .gs-nav {
+                    flex-direction: row;
+                    min-height: 0;
+                    width: 100%;
+                    gap: 6px;
+                    padding: 8px 10px;
+                    border-radius: 18px;
+                    overflow-x: auto;
+                    scrollbar-width: none;
+
+                    &::-webkit-scrollbar {
+                        display: none;
+                    }
+
+                    .gs-nav-item {
+                        flex: 0 0 auto;
+                        width: 56px;
+                        height: 56px;
+                        justify-content: center;
+                        padding: 0;
+                        margin-bottom: 0;
+
+                        // atom-gs offsets the icon by 26px to make room for the
+                        // label it then clips. In an icon-only strip both the
+                        // offset and the label have to go, or the icon sits
+                        // off-centre inside the 56px tile.
+                        .gs-nav-icon {
+                            margin-right: 0;
+                        }
+
+                        .gs-nav-text {
+                            display: none;
+                        }
+                    }
+                }
+
+                // The expand/collapse affordance has no meaning in a row.
+                .toggle-dynamic {
+                    display: none;
+                }
+            }
+
+            .gs-content-area {
+                padding: 16px 14px 32px;
+            }
+        }
+
+        // If the sidebar was expanded on a wider screen and the window then shrinks
+        // to phone width, atom-gs's expanded rules (385px, labels shown) would win
+        // on specificity. Keep the icon strip regardless.
+        &.gs-sidebar-expanded {
+            .gs-main-layout {
+                .top-sidebar-left {
+                    width: auto;
+
+                    .gs-nav {
+                        align-items: center;
+                        padding: 8px 10px;
+
+                        .gs-nav-item {
+                            justify-content: center;
+                            width: 56px;
+                            height: 56px;
+                            padding: 0;
+
+                            .gs-nav-text {
+                                display: none;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // -------------------------------------------------------- promotions
+        .black-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 22px 18px;
+            border-radius: 18px;
+            margin-bottom: 22px;
+
+            img {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+        // ------------------------------------------------------- stack rows
+        .new-top {
+            .in-ln {
+                flex: 1 1 100%;
+
+                &::before {
+                    height: 150px;
+                }
+            }
+        }
+
+        .gs-main-layout {
+            .gs-content-area {
+
+                .gs-links-row {
+                    .gs-links-card,
+                    .empofthe-mnth {
+                        flex: 1 1 100%;
+                    }
+
+                    .gs-links-card {
+                        padding: 20px 16px;
+                    }
+                }
+
+                .gs-services-row {
+                    .gs-services-panel {
+                        flex: 1 1 100%;
+                        padding: 20px 16px;
+
+                        .gs-services-list {
+                            flex-direction: column;
+                            gap: 12px;
+                        }
+                    }
+                }
+
+                .gs-celebrations-row {
+                    .gs-celebrations-card {
+                        padding: 20px 16px;
+                    }
+                }
+
+                .gs-approvals-card {
+                    padding: 16px;
+
+                    .gs-approvals-head {
+                        margin: -42px 0 18px 60px;
+                    }
+                }
+            }
+        }
+
+        .organization-carousel {
+            .organization-structure {
+                flex: 1 1 100%;
+            }
+        }
+
+        .ceo-messagecard {
+            padding: 22px 18px;
+        }
+
+        .calender-card.common-section-gap {
+            padding: 12px 14px;
+        }
+
+        // ------------------------------------------- font sizes (mobile only)
+        .ceo-messagecard {
+            .ceo-subheading {
+                font-size: 26px;
+            }
+
+            .message-content {
+                font-size: 15px;
+            }
+        }
+
+        .lates-newss {
+            .ln--header-txt {
+                font-size: 18px;
+            }
+
+            .ln--subheader-txt {
+                font-size: 13px;
+            }
+        }
+
+        .calender-card.common-section-gap {
+            .text-employee.dashboard-sub-headings {
+                font-size: 20px;
+            }
+        }
+
+        .calender-wrap {
+            .vc-weekdays {
+                div {
+                    font-size: 13px;
+                }
+            }
+        }
+
+        .gs-main-layout {
+            .gs-content-area {
+                .gs-links-row {
+                    .gs-links-card {
+                        .gs-links-card__head {
+                            .gs-links-card__title {
+                                font-size: 18px;
+                            }
+                        }
+                    }
+                }
+
+                .gs-services-row {
+                    .gs-services-panel {
+                        .gs-services-panel__title {
+                            font-size: 21px;
+                        }
+                    }
+                }
+
+                .gs-celebrations-row {
+                    .gs-celebrations-card {
+                        .gs-celeb-head {
+                            margin-bottom: 24px;
+
+                            .gs-celeb-head-title {
+                                font-size: 19px;
+                            }
+                        }
+                    }
+                }
+
+                .gs-approvals-card {
+                    .gs-approvals-head {
+                        .count-gs {
+                            width: 42px;
+                            height: 36px;
+                            font-size: 18px;
+                        }
+                    }
+
+                    .gs-approvals-tabs {
+                        >ul {
+                            gap: 8px;
+
+                            >li {
+                                >a {
+                                    font-size: 14px;
+                                    padding: 8px 14px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .organization-carousel {
+            .organization-structure {
+                .mx-text {
+                    font-size: 18px;
+                }
+            }
+        }
+
+        .gs-celeb-events {
+            .gs-celeb-event {
+                .mx-text {
+                    font-size: 19px;
+                }
+            }
+        }
+
+        .b-footer-top {
+            .left-f {
+                .bahri-txt {
+                    font-size: 20px;
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
+//  6. Narrow content on tablet and desktop — container tier
+//
+//  Expanding the 385px sidebar on a tablet, or on a desktop around 1024px, leaves
+//  under ~580px for the dashboard. The phone layout already handles that width
+//  through the mobile query, so this tier only runs from 768px up. It comes last
+//  so it overrides the tablet row rules it sits on top of.
+// =============================================================================
+
+@media (min-width: $tablet-min) {
+    @container gs-content (max-width: #{$cq-narrow-max}) {
+        .gs-bahri-layout {
+            @include rows-narrow;
+        }
+    }
+}
+
+// mouse pointer
+// =============================================================================
+//  Cursor affordances for every interactive element on the dashboard.
+//
+//  Found by walking the React components for buttons, links, inputs, comboboxes,
+//  ARIA roles, click handlers and disabled states, then reading the cursor each
+//  one actually computes to in the running app. Bootstrap / Atlas
+//  (theme.compiled.css) and the widget stylesheets already gave most of them the
+//  right cursor. These rules make the whole set explicit in one place, and
+//  correct the four that were wrong:
+//    - the header smiley opens the daily check-in but showed the arrow;
+//    - a combobox showed a pointer only on its 12px chevron;
+//    - the active Gregorian / Hijri option showed a pointer for a click that
+//      does nothing;
+//    - the disabled check-in arrow showed the arrow instead of not-allowed.
+//
+//  Order matters. General affordances come first, then the current selection
+//  (default), then disabled states (not-allowed) last. Each later group has at
+//  least the specificity of the rules it needs to override.
+// =============================================================================
+
+.gs-bahri-layout {
+
+    // ------------------------------------------------------------- buttons
+    // Native buttons and Mendix action buttons: caption, icon-only and image
+    // buttons, Load more, the Events search refresh, the attendance card, the
+    // calendar arrows, the carousel dots, the wish presets and Send.
+    button,
+    .btn,
+    .mx-button {
+        cursor: pointer;
+    }
+
+    // --------------------------------------------------------------- links
+    // Mendix link buttons (Read more, the celebration send link) and the
+    // approvals tab anchors.
+    a[href],
+    .mx-link,
+    [role="link"] {
+        cursor: pointer;
+    }
+
+    // ------------------------------------------ elements acting as controls
+    // The Engagement Hub nav item and the celebration event tiles carry
+    // role="button". The other widget roles are listed so any control of that
+    // kind added later behaves the same way.
+    [role="button"],
+    [role="tab"],
+    [role="radio"],
+    [role="checkbox"],
+    [role="switch"],
+    [role="option"],
+    [role="menuitem"] {
+        cursor: pointer;
+    }
+
+    // Clickable without a role: the header smiley, which the check-in binds by
+    // delegation, plus the sidebar items and its expand toggle.
+    .gs-header {
+        .gs-header-actions {
+            .gs-header-mood {
+                cursor: pointer;
+            }
+        }
+    }
+
+    .gs-main-layout {
+        .top-sidebar-left {
+            .gs-nav {
+                .gs-nav-item {
+                    cursor: pointer;
+                }
+            }
+
+            .toggle-dynamic {
+                cursor: pointer;
+            }
+        }
+    }
+
+    // ------------------------------------------------------ tabs and toggles
+    .gs-approvals-tabs {
+        >ul {
+            >li {
+                >a {
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+
+    .calender-wrap {
+        .vc-modebar {
+            .vc-mode {
+                cursor: pointer;
+            }
+        }
+    }
+
+    // ----------------------------------------------------------- dropdowns
+    // The Mendix combobox (the Employee of the Month department picker and the
+    // Organization employee search). The whole control opens its list, so all of
+    // it takes the pointer, not just the chevron. Once the input has focus it is
+    // a text field for filtering, and shows the caret.
+    .widget-combobox {
+        .widget-combobox-input-container,
+        .widget-combobox-selected-items,
+        .widget-combobox-input,
+        .widget-combobox-placeholder-text,
+        .widget-combobox-down-arrow {
+            cursor: pointer;
+        }
+
+        .widget-combobox-input:focus {
+            cursor: text;
+        }
+    }
+
+    select {
+        cursor: pointer;
+    }
+
+    // ---------------------------------------------------------- text entry
+    // The Events search box and the personalised wish textbox.
+    input:not([type]),
+    input[type="text"],
+    input[type="search"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    textarea {
+        cursor: text;
+    }
+
+    // ------------------------------------------------ checkboxes and radios
+    // No native ones are rendered on this page today. This also covers the
+    // RadiobuttonList widget stylesheet that is loaded with the theme.
+    input[type="checkbox"],
+    input[type="radio"],
+    label[for],
+    .radio-option,
+    .radio-label {
+        cursor: pointer;
+    }
+
+    // --------------------------------------------------- current selection
+    // Picking what is already picked does nothing, so, as Bootstrap does for
+    // the active tab, these show the plain arrow.
+    .gs-approvals-tabs {
+        >ul {
+            >li.active {
+                >a {
+                    cursor: default;
+                }
+            }
+        }
+    }
+
+    .calender-wrap {
+        .vc-modebar {
+            .vc-mode--active {
+                cursor: default;
+            }
+        }
+    }
+
+    // ------------------------------------------------------ disabled states
+    // Last, so they win over every affordance above: Punch Out, the attendance
+    // card's icon buttons, and any Mendix button, field or combobox that is
+    // disabled.
+    button:disabled,
+    .btn.disabled,
+    .btn[disabled],
+    .mx-button[disabled],
+    [aria-disabled="true"],
+    [data-disabled="true"],
+    input:disabled,
+    textarea:disabled,
+    select:disabled,
+    .radio-option input[type="radio"]:disabled + .radio-label {
+        cursor: not-allowed;
+    }
+
+    // The combobox rules above are more specific than the generic ones, so its
+    // disabled state is restated at the same depth.
+    .widget-combobox {
+        .widget-combobox-input-container-disabled,
+        .widget-combobox-input-container-disabled .widget-combobox-selected-items,
+        .widget-combobox-input-container-disabled .widget-combobox-input,
+        .widget-combobox-input-container-disabled .widget-combobox-placeholder-text,
+        .widget-combobox-input-container-disabled .widget-combobox-down-arrow,
+        .widget-combobox-input:disabled {
+            cursor: not-allowed;
+        }
+    }
+}
+
+// Daily check-in popup. It is rendered into <body>, outside .gs-bahri-layout,
+// so it needs its own block.
+.gs-mood-pop {
+    .gs-mood-pop__back,
+    .gs-mood-pop__mood,
+    .gs-mood-pop__next {
+        cursor: pointer;
+    }
+
+    // atom-gs.scss gives the disabled arrow `default`. Until a mood is chosen
+    // the arrow cannot be used, which is what not-allowed communicates.
+    .gs-mood-pop__next:disabled {
+        cursor: not-allowed;
+    }
+}
+
+// -----------------------------------------------------------------------------
+//  mouse pointer: static text and layout (audit)
+//
+//  An audit of all 912 rendered elements, with the check-in popup, the wish
+//  presets and the send link opened, found 52 kinds of static text showing the
+//  I-beam: header labels, card titles, badges, list values, calendar days and
+//  the popup copy. None of them does anything on click. The cause is the
+//  initial cursor value `auto`, which turns into the I-beam over any text, and
+//  nothing in the theme overrides it for display text. Every icon and caption
+//  inside a control already inherited that control's pointer, so only
+//  non-controls needed fixing.
+// -----------------------------------------------------------------------------
+
+// Base. cursor is inherited, so `default` on the two roots gives every static
+// span, div, p, heading and label the arrow. Controls keep the cursor declared
+// for them above and hand it to their own icons and captions; text fields keep
+// the caret and disabled controls keep not-allowed.
+.gs-bahri-layout,
+.gs-mood-pop {
+    cursor: default;
+}
+
+.gs-bahri-layout {
+
+    // ---------------------------------------------------------------- header
+    // Brand, weather, ID card, notifications and the user block are display
+    // only; none of them is wired to an action in the Mendix model. The smiley
+    // is the one header control and keeps its pointer.
+    .gs-header {
+        .gs-header-brand,
+        .gs-header-wordmark,
+        .gs-header-weather,
+        .gs-header-card,
+        .gs-header-bell,
+        .gs-header-bell-count,
+        .gs-header-user,
+        .gs-header-initials,
+        .gs-header-user-name,
+        .gs-header-user-role {
+            cursor: default;
+        }
+    }
+
+    .gs-header-black-frame {
+        .gs-ticker-item {
+            cursor: default;
+        }
+    }
+
+    // ---------------------------------------------------- headings and titles
+    .dashboard-sub-headings,
+    .ln--header-txt,
+    .ln--subheader-txt,
+    .gs-links-card__title,
+    .gs-services-panel__title,
+    .gs-celeb-head-title,
+    .gs-approvals-title,
+    .gs-approvals-sub,
+    .ac-title {
+        cursor: default;
+    }
+
+    .calender-wrap {
+        .vc-widget-title,
+        .vc-title {
+            cursor: default;
+        }
+    }
+
+    // ---------------------------------------------------- badges and counters
+    // .date-btn is styled like a pill button but is the static publish date.
+    .badge-x,
+    .count-gs,
+    .state,
+    .date-btn {
+        cursor: default;
+    }
+
+    // ----------------------------------------------- static labels and values
+    // Scoped by card so that no rule reaches a caption inside a control: the
+    // sidebar labels and the celebration tile labels inherit their pointer.
+    .black-card .mx-text,
+    .ceo-messagecard .mx-text,
+    .lates-newss .mx-text,
+    .empofthe-mnth .mx-text,
+    .gs-link-tile__title,
+    .gs-link-tile__desc,
+    .gs-res-tile__title,
+    .gs-service-tile__name,
+    .gs-service-tile__desc,
+    .list-ts .mx-text,
+    .list-eve .mx-text,
+    .rt-gs,
+    .f-clock .mx-text,
+    .gs-wish-input .mx-text,
+    .gs-engage-col .mx-text,
+    .organization-section .mx-text,
+    .b-footer-top .mx-text,
+    .mx-listview-empty {
+        cursor: default;
+    }
+
+    .ac-card {
+        .ac-fields,
+        .ac-timer,
+        .ac-times {
+            cursor: default;
+        }
+    }
+
+    // Holiday days are interactive in the calendar widget (tooltip and click),
+    // so they are left out and keep the widget's pointer if any are configured.
+    .calender-wrap {
+        .vc-weekdays,
+        .vc-day:not(.vc-day--holiday),
+        .vc-empty {
+            cursor: default;
+        }
+    }
+}
+
+// Check-in popup copy.
+.gs-mood-pop {
+    .gs-mood-pop__eyebrow,
+    .gs-mood-pop__title,
+    .gs-mood-pop__hint {
+        cursor: default;
+    }
+}
