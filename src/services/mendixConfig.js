@@ -23,7 +23,7 @@
  * string in .env - it overrides the hardcoded value below.
  */
 export const MENDIX_ORIGIN =
-  import.meta.env.VITE_MENDIX_URL ?? 'http://localhost:8080/';
+  import.meta.env.VITE_MENDIX_URL ?? 'https://mxinterface.rapidhr.com';
 
 /**
  * The deployed app's REAL origin, for links the BROWSER follows rather than
