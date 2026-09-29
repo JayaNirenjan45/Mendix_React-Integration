@@ -108,6 +108,21 @@ $cq-narrow-max: 580px;
             container: gs-content / inline-size;
         }
     }
+
+    // Two backgrounds in atom-gs.scss are absolute URLs into the Mendix runtime
+    // (http://localhost:8080/img/...), so the Employee of the Month card and the
+    // celebration tiles went blank whenever Mendix was not running. public/img
+    // holds byte-identical copies (same md5 as deployment/web/img), so only the
+    // source changes; size, position and repeat still come from atom-gs.scss.
+    // .empofthe-mnth {
+    //     background-image: url("/img/Main$gs_image$EmployeeOfMonth.svg");
+    // }
+
+    .gs-celeb-events {
+        // .gs-celeb-event {
+        //     background-image: url("/img/Main$gs_image$bdaycontainer.svg");
+        // }
+    }
 }
 
 // =============================================================================
@@ -631,6 +646,26 @@ $cq-narrow-max: 580px;
         .gs-header {
             padding: 0 24px;
 
+            //  The brand tile is 100px on a desktop and the glyph inside it is
+            //  nudged 14px down to sit on the tile's optical centre. The offset
+            //  is a fixed number of pixels, so it has to come down with the
+            //  tile — left alone in a smaller box it pushes the glyph past the
+            //  bottom edge, and the tile clips it.
+            .gs-header-brand {
+                .gs-header-logo {
+                    width: 64px;
+                    height: 64px;
+
+                    img {
+                        top: 9px;
+                    }
+                }
+
+                .gs-header-wordmark {
+                    font-size: 22px;
+                }
+            }
+
             .gs-header-actions {
                 gap: 20px;
             }
@@ -731,6 +766,14 @@ $cq-narrow-max: 580px;
 //  5. Mobile <= 767px
 // =============================================================================
 
+//  The dock, on a phone: a 50px tile, in a pill with 7px of padding, with 9px
+//  of air around the pill. 82px in all, which is the room the page gives back
+//  at the bottom so nothing of it ends up underneath.
+$gs-dock-tile: 50px;
+$gs-dock-pad: 7px;
+$gs-dock-air: 9px;
+$gs-dock-height: $gs-dock-tile + $gs-dock-pad * 2 + $gs-dock-air * 2;
+
 @include mobile {
     .gs-bahri-layout {
 
@@ -747,6 +790,11 @@ $cq-narrow-max: 580px;
                 .gs-header-logo {
                     width: 40px;
                     height: 40px;
+
+                    // 14px of nudge in a 100px tile is 6px in this one
+                    img {
+                        top: 6px;
+                    }
                 }
 
                 .gs-header-wordmark {
@@ -802,13 +850,28 @@ $cq-narrow-max: 580px;
             }
         }
 
-        // ----------------------------------------------------------- sidebar
-        // The 113px rail becomes a horizontal icon strip above the content.
+        // -------------------------------------------------------------- dock
+        //  The 113px rail becomes a dock pinned to the bottom of the screen,
+        //  where a thumb already is, with Home in the middle of it. Phones
+        //  only — a tablet keeps the rail, which still has the room for it.
         .gs-main-layout {
             flex-direction: column;
+            // The dock is out of flow, so the page holds its own room for it
+            // rather than each page's content area having to remember to.
+            padding-bottom: calc(#{$gs-dock-height} + env(safe-area-inset-bottom, 0px));
 
             .top-sidebar-left {
-                position: static;
+                position: fixed;
+                // `top: auto` matters: atom-gs makes this a sticky rail with
+                // `top: 144px`, and a fixed box given both a top and a bottom is
+                // stretched between them — the dock came out 756px tall, with the
+                // pill floating in the middle of the screen.
+                top: auto;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 60;
+                height: auto;
                 flex-direction: row;
                 align-items: center;
                 // Full width through stretch, not `width: 100%`. atom-gs animates
@@ -818,34 +881,76 @@ $cq-narrow-max: 580px;
                 // `auto` is not animatable, so a breakpoint change is instant.
                 width: auto;
                 align-self: stretch;
-                padding: 10px 12px 0;
+                padding: $gs-dock-air 12px calc(#{$gs-dock-air} + env(safe-area-inset-bottom, 0px));
+                // the air around the pill is not part of the dock: a tap there
+                // belongs to the page underneath
+                pointer-events: none;
 
                 .gs-nav {
                     flex-direction: row;
+                    justify-content: space-between;
                     min-height: 0;
                     width: 100%;
                     gap: 6px;
-                    padding: 8px 10px;
-                    border-radius: 18px;
-                    overflow-x: auto;
-                    scrollbar-width: none;
+                    padding: $gs-dock-pad 14px;
+                    border-radius: 22px;
+                    // it no longer scrolls: five tiles fit a phone's width
+                    overflow: visible;
+                    pointer-events: auto;
+                    box-shadow:
+                        0 10px 30px rgba(15, 39, 67, 0.16),
+                        0 2px 8px rgba(15, 39, 67, 0.08);
+                    transition: opacity 0.45s ease;
 
-                    &::-webkit-scrollbar {
-                        display: none;
+                    //  Home in the middle, the two service entries before it and
+                    //  the other two after. The model lists them Home, Services,
+                    //  Resources, Engagement, Multimedia, so only Home moves.
+                    .gs-nav-item:nth-child(1) {
+                        order: 3;
+                    }
+
+                    .gs-nav-item:nth-child(2) {
+                        order: 1;
+                    }
+
+                    .gs-nav-item:nth-child(3) {
+                        order: 2;
+                    }
+
+                    .gs-nav-item:nth-child(4) {
+                        order: 4;
+                    }
+
+                    .gs-nav-item:nth-child(5) {
+                        order: 5;
+                    }
+
+                    //  gs-nav-dock.js marks the dock idle three seconds after the
+                    //  last pointer, touch, key or scroll, so it stops competing
+                    //  with the page. Anything at all brings it back, and so does
+                    //  reaching for it.
+                    &.gs-nav-idle {
+                        opacity: 0.45;
+                    }
+
+                    &.gs-nav-idle:hover,
+                    &.gs-nav-idle:focus-within,
+                    &.gs-nav-idle:active {
+                        opacity: 1;
                     }
 
                     .gs-nav-item {
                         flex: 0 0 auto;
-                        width: 56px;
-                        height: 56px;
+                        width: $gs-dock-tile;
+                        height: $gs-dock-tile;
                         justify-content: center;
                         padding: 0;
                         margin-bottom: 0;
 
                         // atom-gs offsets the icon by 26px to make room for the
-                        // label it then clips. In an icon-only strip both the
+                        // label it then clips. In an icon-only dock both the
                         // offset and the label have to go, or the icon sits
-                        // off-centre inside the 56px tile.
+                        // off-centre inside the tile.
                         .gs-nav-icon {
                             margin-right: 0;
                         }
@@ -877,12 +982,12 @@ $cq-narrow-max: 580px;
 
                     .gs-nav {
                         align-items: center;
-                        padding: 8px 10px;
+                        padding: $gs-dock-pad 14px;
 
                         .gs-nav-item {
                             justify-content: center;
-                            width: 56px;
-                            height: 56px;
+                            width: $gs-dock-tile;
+                            height: $gs-dock-tile;
                             padding: 0;
 
                             .gs-nav-text {
@@ -1107,6 +1212,176 @@ $cq-narrow-max: 580px;
     @container gs-content (max-width: #{$cq-narrow-max}) {
         .gs-bahri-layout {
             @include rows-narrow;
+        }
+    }
+}
+
+// =============================================================================
+//  7. Sign-in page — Main.Employee_Login_Page_New (bahri-login-new.scss)
+//
+//  The sign-in scene is a two-column flex shell: brand copy on the left (46%),
+//  the glass card centred in the right 54%, drawn against a 1920px baseline.
+//  bahri-login-new.scss loads before this file, and every selector here repeats
+//  its nesting depth, so equal specificity wins on source order.
+//
+//    wide        >= 1920px   the 1920 composition, centred (nothing stretches)
+//    fluid  1024 .. 1919px   the divider keeps clear of the card
+//    handheld     < 1024px   only the card and the living scene (light, sea,
+//        or a touch screen    ship): the brand column, divider and rings go.
+//        up to 1366px         A tablet held landscape is 1024-1366 CSS px, so
+//                            touch-primary screens keep this band up there.
+//    mobile       <  768px   full-width card, tighter spacing and type
+//    touch    (hover: none)  a tap must not leave the card lifted
+//
+//  These bands use their own fractional bounds rather than the mixins above:
+//  a window on a 125% or 150% display can be a fractional 1023.2 CSS px wide,
+//  which `max-width: 1023px` and `min-width: 1024px` both miss — and on this
+//  page that gap would show the unfixed two-column layout with the divider
+//  through the card. `1023.98px`, as Bootstrap does it, leaves no gap.
+//  (Media range syntax — `width < 1024px` — is not used: the sass Mendix
+//  bundles rejects it inside a nested group and fails the whole theme build.)
+// =============================================================================
+
+// ------------------------------------------------------------------- wide
+//  Past the baseline the two halves stop growing and sit centred: 46% / 54%
+//  and the brand's 7% / 4% side insets of 1920, in pixels, so the copy and the
+//  card keep their distance from the divider on a wide monitor. At exactly
+//  1920px these are the baseline values, so nothing already verified moves.
+@media (min-width: 1920px) {
+    .bahri-login-new {
+        .bl-shell {
+            justify-content: center;
+        }
+
+        .bl-brand {
+            flex: 0 0 883px;
+            padding: 115px 77px 115px 134px;
+        }
+
+        .bl-panel {
+            flex: 0 0 1037px;
+        }
+
+        // 14% + 440px of 1920 = 709px from the composition's left edge
+        .bl-shell::after {
+            left: calc(50% - 251px);
+        }
+    }
+}
+
+// ------------------------------------------------------------------ fluid
+//  The card is centred in the right 54%, so its left edge sits at 73% - 195px.
+//  Below ~1117px the baseline divider (14% + 440px) would run through it; from
+//  there down the divider stays 40px short of the card instead.
+@media (min-width: 1024px) and (max-width: 1919.98px) {
+    .bahri-login-new {
+        .bl-shell::after {
+            left: min(calc(14% + 440px), calc(73% - 235px));
+        }
+    }
+}
+
+// --------------------------------------------------------------- handheld
+//  Tablet and phone: only the card and the living scene. The brand column,
+//  the divider and the rings and dots around the card go; the panel then owns
+//  the whole shell (which is still viewport-high) and centres the card in it.
+//  `pointer: coarse` is a finger-first device (iPad, Android tablet, a laptop
+//  in tablet mode); a touch laptop with its mouse or trackpad reports `fine`
+//  and keeps the desktop scene.
+@media (max-width: 1023.98px), (pointer: coarse) and (max-width: 1366px) {
+    .bahri-login-new {
+        // Mobile browsers measure `100vh` with the URL bar retracted, so the
+        // shell would be a bar's height taller than what is on screen and the
+        // card would centre below the visible middle. `dvh` tracks the visible
+        // height; browsers without it keep the `vh` value from the base file.
+        &,
+        >.mx-placeholder,
+        >.mx-placeholder>div,
+        .mx-layoutcontainer,
+        .mx-region,
+        .bl-shell {
+            min-height: calc(100dvh - 1px);
+        }
+
+        .bl-brand,
+        .bl-shell::after,
+        .bl-panel::before {
+            display: none;
+        }
+
+        .bl-panel {
+            flex: 1 1 100%;
+            padding: 32px 24px;
+        }
+
+        // no pointer to follow on a tablet: hold the card still
+        .bl-form {
+            transform: none !important;
+        }
+    }
+}
+
+// ----------------------------------------------------------------- mobile
+@media (max-width: 767.98px) {
+    .bahri-login-new {
+        .bl-panel {
+            padding: 24px 16px;
+        }
+
+        // 343px wide on a 375px phone; the glass rim and reflection follow
+        // the tighter corner.
+        .bl-form {
+            padding: 30px 22px 26px;
+            border-radius: 20px;
+            gap: 16px;
+
+            &::before,
+            &::after {
+                border-radius: 20px;
+            }
+        }
+
+        // -------------------------------------------- font sizes (mobile only)
+        .bl-title {
+            font-size: 23px;
+        }
+
+        .bl-subtitle {
+            font-size: 13.5px;
+        }
+
+        // 16px is the size below which mobile browsers zoom into a focused field
+        .bl-input input,
+        input.bl-input {
+            font-size: 16px;
+        }
+
+        .bl-help {
+            font-size: 12.5px;
+        }
+
+        // the ship, at the scale of a phone screen
+        .bl-shell::before {
+            width: 130px;
+            height: 52px;
+        }
+    }
+}
+
+// ------------------------------------------------------------------ touch
+//  A tapped card stays :hover until the next tap elsewhere, which would leave
+//  it lifted for the whole form fill: both halves of the hover state — the
+//  4px lift and the deeper shadow — return to the card's resting values.
+@media (hover: none) {
+    .bahri-login-new {
+        .bl-form:hover {
+            translate: none;
+            box-shadow:
+                0 16px 40px rgba(15, 39, 67, 0.1),
+                0 2px 6px rgba(15, 39, 67, 0.05),
+                inset 0 1px 1px rgba(255, 255, 255, 1),
+                inset 0 -2px 6px rgba(255, 255, 255, 0.35),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.22);
         }
     }
 }
@@ -1452,6 +1727,731 @@ $cq-narrow-max: 580px;
     .gs-mood-pop__eyebrow,
     .gs-mood-pop__title,
     .gs-mood-pop__hint {
+        cursor: default;
+    }
+}
+
+// =============================================================================
+//  8. Employee service request pages — the four request forms
+//     DigitalCard.DigitalCardRequest            (.gs-svc-idcard)
+//     CorporateAdmin.DriverRequest              (.gs-svc-car)
+//     CorporateAdmin.FoodRequest                (.gs-svc-food)
+//     EmployeeSelfServices.Absence_AnnualLeave  (.gs-svc-calendar)
+//
+//  Their look is in gs-bahri/atom-service-gs.scss; every band lives here.
+//
+//    desktop   >= 1081px   form and balance side by side, 22px frame, 1180 column
+//    stack     <= 1080px   Absence's balance drops under the form (reference .split)
+//    single    <=  860px   the two-column field grid becomes one (reference .grid)
+//    handheld  <= 1023px   a tighter frame; the rail is the dashboard's own strip
+//    mobile    <=  767px   sticky offsets, card, actions, dialog and pickers resize
+//    phone     <=  480px   the smallest sizes
+//    short     (landscape) a pinned header must not eat a short screen
+//
+//  Rooted at `.mx-page.gs-service-page` rather than `.gs-service-page`: the
+//  service stylesheet is imported AFTER this file (it has to outrank the
+//  dashboard), so one extra class is what lets these rules land on top of it.
+// =============================================================================
+
+// ----------------------------------------------------- Absence: form over panel
+//  The form and the balance share a row at 1.55fr / 0.95fr. Below 1080px the
+//  panel has less than the 300px it needs, so the two stack — the width the
+//  reference gives up on its own .split.
+//
+//  Measured 60px later here, though. The reference rail is 72px wide inside a
+//  22px shell; this one is 113px, so at the same window width the Mendix
+//  content column is about 60px narrower — 1140px here is the reference's
+//  1080px. That 60px is exactly what a 1920px screen at 175% Windows scaling
+//  fell into: a 1097px CSS viewport holding a desktop split with a tablet's
+//  room for it.
+@media (max-width: 1139.98px) {
+    .mx-page.gs-service-page {
+
+        // Matched on the row's children rather than on a `col-` class. A
+        // layout grid column left on Auto weight renders as Bootstrap's bare
+        // `.col`, which has no hyphen in it, so `[class*="col-"]` reaches
+        // the form's column but can miss the balance panel's — and half a
+        // stack rule leaves the row exactly as it was.
+        .row:has(> * > .gs-svc-form) {
+            gap: 20px;
+
+            //  Declared !important because the rule it has to replace —
+            //  atom-service-gs's `.gs-service-page .row:has(> [class*='col-']
+            //  > .gs-svc-form) > [class*='col-']:not(:has(> .gs-svc-form))` —
+            //  is six classes deep and comes from a file imported after this
+            //  one, so it wins both specificity and order. Its `flex: 0.95 1
+            //  300px` is what crushed the form to a 25px sliver beside the
+            //  balance panel on a phone.
+            > *,
+            > *:has(> .gs-svc-form),
+            > *:not(:has(> .gs-svc-form)) {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+            }
+        }
+    }
+}
+
+// --------------------------------------------------- fields: two columns to one
+//  Each field is half the row minus the 24px gutter. At 860px that half is under
+//  300px, where labels wrap and dates lose their place — the width the reference
+//  collapses its .grid at.
+@media (max-width: 860px) {
+    .mx-page.gs-service-page {
+        .gs-svc-fields .items-row {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding-right: 0;
+        }
+
+        //  The field grid is not the only thing in two columns. Three rows on
+        //  these pages are Mendix layout grids instead: the Absence date range
+        //  beside the day count, the emergency contact beside the replacement,
+        //  and the grid the shared attachment snippet is built from. A layout
+        //  grid column left on Auto weight renders as Bootstrap's `.col`,
+        //  which is `flex: 1 0 0%` at every width and so never stacks — at
+        //  375px that showed "23/07/2026" as "23/07" and four letters of the
+        //  name in the combo box.
+        //
+        //  Matched on the row's children, not on a `col-` class: which of
+        //  `.col`, `.col-sm-6`, `.col-md-8` a column carries depends on
+        //  which of its three weights the page set, and one of them is a class
+        //  with no hyphen in it at all.
+        .gs-svc-body .row > * {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        // ... except the attachment row, which is a layout grid too, already
+        // flattened by atom-service-gs into the reference's single file row.
+        .gs-svc-body .add-attachments-row .row > * {
+            flex: 0 0 auto;
+            width: auto;
+            max-width: none;
+            margin-bottom: 0 !important;
+        }
+
+        //  A layout grid carries a gutter of its own on top of the one its row
+        //  and columns already cancel between them, so these fields sat inset
+        //  from the rest of the card once they were full width.
+        .gs-svc-body .mx-layoutgrid {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        // ------------------------------------------------- one field rhythm
+        //  Every field states the same distance to the next, wherever it sits:
+        //  in the wrap container, outside it — the phone copy of Drivers and
+        //  Catering keeps one field in a data view of its own — or in a nested
+        //  layout grid. The fields carry a mix of older wrappers besides
+        //  (common-form_group, required-form-group, common-select,
+        //  calender-container, the phone widget's own box), each with a bottom
+        //  margin of its own, which is what made the gaps change as you went
+        //  down the card. The wrap container's row gap is zeroed so it cannot
+        //  add to this, and the form groups stop carrying their own.
+        .gs-svc-form .items-row,
+        .gs-svc-form .gs-svc-field-wide,
+        .gs-svc-body .row > * {
+            margin-bottom: 16px !important;
+        }
+
+        .gs-svc-fields {
+            row-gap: 0;
+        }
+
+        .gs-svc-form .form-group {
+            margin-bottom: 0 !important;
+        }
+
+        .gs-svc-body .add-attachments-row .row > * {
+            margin-bottom: 0 !important;
+        }
+    }
+}
+
+// ------------------------------------------------ laptop, and scaled screens
+//  1097px is what a 1920px screen reports at 175% Windows scaling: a desktop
+//  width with a tablet's room in it. With the balance panel now stacked under
+//  the form at that width, the page header is what is left over-scaled — it is
+//  drawn for a 1600px column, at a 52px badge and a 27px title. It gives some
+//  of that back, and the card frame comes in with it.
+//
+//  The page class is repeated so these outrank atom-service-gs, which declares
+//  the badge again per page variant (.gs-svc-idcard, .gs-svc-car, ...) at the
+//  same specificity, from a file that is imported later.
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+    .mx-page.gs-service-page.gs-service-page {
+        .gs-svc-head {
+            gap: 14px;
+
+            &::before {
+                width: 46px;
+                height: 46px;
+                background-size: 23px 23px, cover;
+            }
+
+            .common-mini_header {
+
+                h2,
+                .font-bold {
+                    font-size: 23px;
+                }
+            }
+
+            .gs-svc-head-sub {
+                font-size: 13.5px;
+            }
+        }
+
+        .gs-svc-body {
+            padding: 22px 24px;
+        }
+
+        .gs-svc-actions {
+            padding: 16px 24px;
+        }
+    }
+}
+
+// --------------------------------------------------------- tablet and narrower
+@include handheld {
+    .mx-page.gs-service-page {
+        // the page margin comes in from 22px; by this width the rail is already
+        // the dashboard's horizontal strip
+        .gs-main-layout .gs-content-area {
+            padding: 18px;
+        }
+
+        // the donut needs far less air below it once the card is narrow
+        .absence-1-c .widget-custom-html-snippet .legend-container {
+            margin-top: 34px;
+        }
+    }
+
+    // a field scrolled into view has to clear what is pinned above it: the app
+    // bar, its ticker, and the page header, still at full height here
+    .mx-scrollcontainer-wrapper:has(.gs-service-page),
+    html:has(.gs-service-page) {
+        scroll-padding-top: 240px;
+    }
+}
+
+// ---------------------------------------------------------------- mobile
+@include mobile {
+    .mx-page.gs-service-page {
+        .gs-main-layout .gs-content-area {
+            padding: 14px;
+        }
+
+        // the app header is 64px here and its ticker 34px
+        .gs-svc-head {
+            top: 98px;
+            gap: 12px;
+            // the bar keeps its air, on the tighter frame
+            padding: 10px 12px;
+            margin-right: -12px !important;
+            margin-left: -12px !important;
+
+            &::before {
+                width: 44px;
+                height: 44px;
+                background-size: 22px 22px, cover;
+            }
+
+            .common-mini_header {
+                h2,
+                .font-bold {
+                    font-size: 22px;
+                }
+            }
+        }
+
+        .gs-svc-body {
+            padding: 20px 18px 14px;
+        }
+
+        // ------------------------------- Drivers and Catering, on a phone
+        //  Those two pages hold a second copy of the form for phones — the
+        //  wide one is set to "Hide on: Phone", this one to "Hide on: Tablet,
+        //  Desktop" — and the phone copy has no .gs-svc-body in it at all. So
+        //  on a phone its fields sat against the edge of the card, while
+        //  Digital Card and Absence, which have no second copy, kept their
+        //  inner padding. The card supplies it here instead, and the action
+        //  bar takes it back so it still runs edge to edge.
+        .gs-svc-form:not(:has(.gs-svc-body)) {
+            padding: 20px 18px 14px;
+
+            .gs-svc-actions {
+                margin-right: -18px;
+                margin-bottom: -14px;
+                margin-left: -18px;
+            }
+        }
+
+        // ---------------------------------------------- one field rhythm
+        //  The fields carry a mix of older wrappers — common-form_group,
+        //  required-form-group, common-select, calender-container, the phone
+        //  widget's own box — each with a bottom margin of its own, so the
+        //  distance from one field to the next changed as you went down the
+        //  card. The wrap container states that distance once, and the fields
+        //  stop carrying their own.
+
+
+        // nothing trails the last field, so the action bar follows the form
+        // instead of a strip of empty card
+        .gs-svc-body .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        // one divider's worth of air is enough between sections on a phone
+        .gs-svc-fields > .items-row + .gs-svc-sect,
+        .gs-svc-fields > .gs-svc-field-wide + .gs-svc-sect {
+            padding-top: 20px;
+        }
+
+        .gs-svc-actions {
+            padding: 14px 18px;
+            gap: 10px;
+
+            // Two to a row, and a third takes the row it starts, rather than
+            // three left-packed against a ragged edge. The buttons sit in
+            // wrapper divs that atom-service-gs turns into `display: contents`,
+            // so the flex children of this bar are the buttons themselves —
+            // sizing the wrappers, as `> *` did, reaches nothing.
+            .btn,
+            .mx-button {
+                flex: 1 1 calc(50% - 5px);
+                min-width: 0;
+                padding: 0 14px;
+            }
+
+            // delete stops being pushed to the far edge once the row wraps
+            .gs-svc-btn-delete {
+                margin-left: 0 !important;
+            }
+        }
+
+        .absence-1-c {
+            padding: 16px !important;
+
+            .widget-custom-html-snippet .legend-container {
+                margin-top: 24px;
+            }
+        }
+
+        // the time card and its clock, at the scale of a phone
+        .rdtPicker {
+            .gs-clock-face {
+                width: 100px;
+                height: 100px;
+                background-size: 100px 100px;
+            }
+
+            .gs-clock-hour {
+                height: 26px;
+            }
+
+            .gs-clock-minute {
+                height: 37px;
+            }
+
+            .rdtCounter {
+                width: 48px;
+
+                .rdtCount {
+                    width: 42px;
+                    font-size: 19px;
+                }
+            }
+        }
+    }
+
+    // a field scrolled into view has to clear the pinned header, shorter here
+    .mx-scrollcontainer-wrapper:has(.gs-service-page),
+    html:has(.gs-service-page) {
+        scroll-padding-top: 200px;
+    }
+
+    //  The range picker opens two month panels side by side, which is about
+    //  600px — wider than the phone it is opening on, so the second month ran
+    //  off the side of the screen. Stacked, the dropdown is one month wide and
+    //  both are reachable without scrolling sideways.
+    .ant-picker-dropdown {
+        max-width: calc(100vw - 20px);
+
+        .ant-picker-panel-container {
+            width: auto;
+        }
+
+        .ant-picker-panels {
+            flex-direction: column;
+        }
+
+        .ant-picker-panel {
+            width: 100%;
+        }
+
+        //  Antd hides the forward arrows on the first panel and the back arrows
+        //  on the second, because side by side they would step the two months
+        //  over each other. One above the other, each month is navigated on its
+        //  own and needs its own pair.
+        .ant-picker-panel .ant-picker-header > button {
+            visibility: visible;
+        }
+    }
+
+    // the history dialog takes the screen rather than floating in it
+    .gs-hist-backdrop.gs-hist-backdrop {
+        padding: 14px;
+
+        .absence-2-c {
+            width: 100%;
+            max-height: 86vh;
+            padding: 18px !important;
+        }
+    }
+}
+
+// ----------------------------------------------------------------- phone
+@media (max-width: 480px) {
+    .mx-page.gs-service-page {
+        .gs-svc-head {
+            &::before {
+                width: 38px;
+                height: 38px;
+                background-size: 19px 19px, cover;
+            }
+
+            .common-mini_header {
+                h2,
+                .font-bold {
+                    font-size: 19px;
+                }
+            }
+
+            .gs-svc-head-sub {
+                font-size: 12.5px;
+            }
+
+            .gs-svc-chip {
+                padding: 4px 9px;
+                font-size: 11px;
+            }
+        }
+
+        .gs-svc-body {
+            padding: 16px 14px 12px;
+        }
+
+        .gs-svc-form:not(:has(.gs-svc-body)) {
+            padding: 16px 14px 12px;
+
+            .gs-svc-actions {
+                margin-right: -14px;
+                margin-bottom: -12px;
+                margin-left: -14px;
+            }
+        }
+
+        .gs-svc-form .items-row,
+        .gs-svc-form .gs-svc-field-wide,
+        .gs-svc-body .row > * {
+            margin-bottom: 14px !important;
+        }
+
+        .gs-svc-body .add-attachments-row .row > * {
+            margin-bottom: 0 !important;
+        }
+
+        // the file row at the width of a phone: the paperclip tile, the name
+        // and the delete button keep their proportions to one another
+        .sm-form-comment,
+        .add-attachments-row {
+            gap: 10px;
+            padding: 10px 12px;
+        }
+
+        .d-flex-attach {
+            gap: 10px;
+        }
+
+        .d-flex-attach::before,
+        .add-attachments-row:has(> .mx-layoutgrid)::before {
+            width: 34px;
+            height: 34px;
+            background-size: 16px 16px;
+        }
+
+        .comment-delete_btn {
+            width: 36px;
+            height: 36px;
+            background-size: 16px 16px;
+        }
+
+        // One to a row. Two would leave 150px each, which is narrower than
+        // "Save as Draft" and its icon.
+        .gs-svc-actions {
+            padding: 12px 14px;
+
+            .btn,
+            .mx-button {
+                flex: 1 1 100%;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .absence-1-c .widget-custom-html-snippet .legend-container {
+            margin-top: 18px;
+        }
+
+        .rdtPicker .gs-clock-face {
+            width: 92px;
+            height: 92px;
+            background-size: 92px 92px;
+        }
+    }
+
+    .gs-hist-backdrop.gs-hist-backdrop .absence-2-c {
+        padding: 16px !important;
+        border-radius: 14px;
+    }
+
+    .gs-hist-close {
+        top: 12px;
+        right: 12px;
+    }
+}
+
+// -------------------------------------------------- rows that render nothing
+//  A field whose widget is hidden still leaves its row behind: on the phone
+//  copy of Drivers, .mx-name-container22.items-row measures 340 x 0 at the top
+//  of the card. Zero height, but the rhythm above gave it a bottom margin all
+//  the same, and that showed up as a band of blank card above the first label.
+//
+//  A row that rendered something has a control, a label or a value in it.
+//  One that rendered nothing has none of them, and states no distance to the
+//  next. Declared after every band above so it settles both the 16px and the
+//  14px, and it only takes the margin away — the row is zero-height anyway, so
+//  there is nothing to be gained by hiding it and something to lose if a page
+//  ever puts a widget in there that this list does not name.
+$gs-field-content: ".form-group, .control-label, label, input, select, textarea, .mx-text, .radio-option, .ant-picker, .react-tel-input, .widget-combobox, .mx-listview, a, button";
+
+@media (max-width: 860px) {
+    .mx-page.gs-service-page {
+        .gs-svc-form .items-row:not(:has(#{$gs-field-content})),
+        .gs-svc-form .gs-svc-field-wide:not(:has(#{$gs-field-content})),
+        .gs-svc-body .row > *:not(:has(#{$gs-field-content})) {
+            margin-bottom: 0 !important;
+        }
+    }
+}
+
+// ------------------------------------------------------------- short screens
+//  A phone held sideways has around 380px of height, and the pinned header plus
+//  the app's own chrome would take a third of it. The header gives its air back.
+@media (max-height: 560px) and (max-width: 1023px) {
+    .mx-page.gs-service-page {
+        .gs-svc-head {
+            padding-top: 6px;
+            padding-bottom: 6px;
+            margin-top: -6px !important;
+
+            &::before {
+                width: 34px;
+                height: 34px;
+                background-size: 17px 17px, cover;
+            }
+        }
+    }
+
+    .gs-hist-backdrop.gs-hist-backdrop .absence-2-c {
+        max-height: 92vh;
+    }
+}
+
+// =============================================================================
+//  9. Cursor affordances — the four service pages and the sign-in screen
+//
+//  The same treatment the dashboard has above, for the other pages. The rule
+//  behind all of it: the cursor answers what the element does. A control that
+//  acts on a click gets the hand, something you can type into gets the I-beam,
+//  everything that only displays gets the arrow, and anything switched off says
+//  so. Without this the initial value `auto` turns into an I-beam over every
+//  heading, label and value, which reads as if the page were full of text
+//  fields.
+//
+//  The list covers the pop-ups too: Mendix renders those on <body>, outside the
+//  page, so they cannot be reached from the page scope. Classes are doubled and
+//  the pages rooted at .mx-page so these land on top of gs-bahri/atom-service-gs
+//  and bahri-login-new, both of which are imported after this file.
+// =============================================================================
+
+$gs-cursor-surfaces: ".mx-page.gs-service-page, .mx-page.bahri-login-new, .mx-window.testing.testing, .mx-window.request-popups.request-popups, .modal-dialog.mx-dialog.mx-dialog, .modal-dialog.mx-window.mx-window, .gs-hist-backdrop.gs-hist-backdrop, .rdtPicker.rdtPicker, .ant-picker-dropdown.ant-picker-dropdown";
+
+#{$gs-cursor-surfaces} {
+    // Base. cursor inherits, so the arrow on the root reaches every static
+    // span, heading, paragraph, label and value inside it.
+    cursor: default;
+
+    // ------------------------------------------------------------- controls
+    // Buttons of every kind: Submit, Save as Draft, Cancel, Delete, the +Add
+    // buttons, the attachment trash, the history icon and its close, the
+    // password eye on the sign-in card, and the time picker steppers.
+    button,
+    .btn,
+    .mx-button,
+    .add-button,
+    .comment-delete_btn,
+    .gs-hist-btn,
+    .gs-hist-close,
+    .toggle-password-button,
+    .rdtBtn,
+    .rdtSwitch,
+    .rdtNext,
+    .rdtPrev,
+    [role="button"],
+    [role="tab"],
+    [role="option"],
+    [role="menuitem"] {
+        cursor: pointer;
+    }
+
+    // Links: the attachment file name, Read more, any anchor.
+    a[href],
+    .mx-link,
+    [role="link"] {
+        cursor: pointer;
+    }
+
+    // Choosing: radios and their labels, checkboxes, and a label bound to a
+    // field — clicking any of them makes the choice or moves the caret.
+    input[type="radio"],
+    input[type="checkbox"],
+    label[for],
+    .radio,
+    .radio > label,
+    .radio-label,
+    .legend-item .gs-swatch {
+        cursor: pointer;
+    }
+
+    // ----------------------------------------------------------- text entry
+    // Anything that takes typing gets the I-beam: the request fields, the
+    // comment box, the sign-in credentials.
+    input:not([type]),
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="url"],
+    textarea,
+    [contenteditable="true"] {
+        cursor: text;
+    }
+
+    // ------------------------------------------------- pickers and dropdowns
+    // These look like fields but open a panel instead of taking typing, so
+    // they read as buttons — dates, times, the enum dropdowns and the combobox
+    // (which becomes a text field only once it has focus and filters).
+    select,
+    .rdt input,
+    .ant-picker input,
+    .ant-picker,
+    input[type="date"],
+    input[type="time"],
+    .widget-combobox-input-container,
+    .widget-combobox-selected-items,
+    .widget-combobox-placeholder-text,
+    .widget-combobox-down-arrow {
+        cursor: pointer;
+    }
+
+    .widget-combobox-input:focus {
+        cursor: text;
+    }
+
+    // Days, hours and minutes in an open picker are all choices.
+    .rdtDay,
+    .rdtHour,
+    .rdtMinute,
+    .rdtSecond,
+    .rdtMonth,
+    .rdtYear,
+    .ant-picker-cell {
+        cursor: pointer;
+    }
+
+    // ------------------------------------------------------- display only
+    // Things that look interactive but are not: the status chips, the section
+    // headings, the balance figures, the history entries, the empty states,
+    // the clock face, and the sign-in card copy.
+    .gs-svc-chip,
+    .gs-svc-sect,
+    .gs-svc-sect-title,
+    .gs-svc-head,
+    .gs-svc-head-sub,
+    .cr-status,
+    .legend-item,
+    .spread-tb,
+    .mx-listview-empty,
+    .gs-clock,
+    .gs-clock-face,
+    .rdtCount,
+    .rdtCounterSeparator,
+    .bl-title,
+    .bl-subtitle,
+    .bl-help,
+    .bl-error,
+    .bl-brand-title,
+    .bl-brand-sub,
+    .bl-announce,
+    .bl-announce-text,
+    .bl-announce-label,
+    .bl-announce-chip {
+        cursor: default;
+    }
+
+    // ------------------------------------------------------- switched off
+    // Last, so it wins over every affordance above. Read-only fields (Location,
+    // Department, the dates the system fills in) keep the arrow — they are
+    // display, not a broken control — while anything genuinely disabled says
+    // it cannot be used.
+    input[readonly],
+    textarea[readonly],
+    .form-control[readonly] {
+        cursor: default;
+    }
+
+    input:disabled,
+    textarea:disabled,
+    select:disabled,
+    button:disabled,
+    .btn.disabled,
+    .btn[disabled],
+    .mx-button[disabled],
+    [aria-disabled="true"],
+    [data-disabled="true"],
+    .widget-combobox-input-container-disabled,
+    .widget-combobox-input:disabled,
+    input[type="radio"]:disabled,
+    input[type="radio"]:disabled + label {
+        cursor: not-allowed;
+    }
+}
+
+// The sign-in scene is drawn on pseudo-elements that already ignore the
+// pointer; the card and its glass are display only, and only the form inside
+// reacts. Stated here so the whole screen reads the same way.
+.mx-page.bahri-login-new {
+    .bl-shell,
+    .bl-brand,
+    .bl-panel,
+    .bl-form,
+    .bl-form-head,
+    .bl-field {
         cursor: default;
     }
 }

@@ -17,10 +17,39 @@
     <link rel="stylesheet" href="/mx-theme/widgets/widgets.css" />
     <link rel="stylesheet" href="/mx-theme/theme.compiled.css" />
     <link rel="stylesheet" href="/mx-theme/RadiobuttonList.css" />
+
+    <!--
+      Sign-in hand-off. Copied from theme/web/index.html: bahri-login-fx.js flags a
+      successful sign-in in sessionStorage, and this raises the curtain
+      (html.bl-handoff, styled in bahri-login-new.scss) before the first paint of the
+      screen that follows, so the swap is covered rather than seen.
+    -->
+    <script>
+      (function () {
+        try {
+          var t = +sessionStorage.getItem('bl-signin-transition') || 0;
+          if (t && Date.now() - t < 20000) { document.documentElement.classList.add('bl-handoff'); }
+          else if (t) { sessionStorage.removeItem('bl-signin-transition'); }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <!-- body classes copied 1:1 from the running Mendix client -->
   <body class="web-theme-cyan profile-desktop role-employee">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!--
+      Theme scripts, byte-for-byte out of theme/web and loaded exactly as the Mendix
+      index.html loads them. All three work off the DOM alone, so they behave the same
+      under React as they do under the Mendix client:
+        bahri-login-fx.js  tilt, the rotating announcement, the sign-in hand-off
+        gs-svc-clock.js    the analog face over the time picker + the absence history dialog
+        gs-nav-dock.js     the phone nav stepping back after three idle seconds
+      gs-mood-checkin.js is NOT loaded: the check-in is React state in NewLayout.jsx.
+    -->
+    <script src="/mx-theme/bahri-login-fx.js" defer></script>
+    <script src="/mx-theme/gs-svc-clock.js" defer></script>
+    <script src="/mx-theme/gs-nav-dock.js" defer></script>
   </body>
 </html>

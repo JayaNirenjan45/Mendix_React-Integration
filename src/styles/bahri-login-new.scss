@@ -1,0 +1,934 @@
+// =============================================================================
+//  bahri-login-new.scss
+//  Sign-in screen for Main.Employee_Login_Page_New — "Aurora Glass".
+//  A 1:1 port of the reference: R:\Bahri Design as website\login-samples.html
+//
+//  Everything decorative is CSS drawn on pseudo-elements, so the page needs no
+//  extra widgets, and every graphic is an inline data-URI (nothing from the
+//  image collection). The two behaviours CSS cannot do — the gentle card tilt
+//  and the rotating "Latest at Bahri" announcement — live in
+//  theme/web/bahri-login-fx.js (loaded from index.html, inert elsewhere).
+//
+//  Where each reference layer lives. The layout grid is two rows of one
+//  column; rows and columns are flattened with display:contents, and their
+//  pseudo-elements are reused as absolutely-positioned layers of the shell.
+//  Every layer has an explicit z-index, so tree order never matters:
+//    bl-shell background ........ aurora mesh + dot texture
+//    row 1 ::before / ::after ... blob A / blob B ........ z 1
+//    row 2 ::before ............. blob C ................ z 1
+//    bl-shell ::before .......... cargo ship (voyage+bob)  z 2
+//    row 2 ::after .............. sea wave ............... z 3
+//    bl-brand / bl-panel ........ content ................ z 4
+//    bl-panel ::before .......... rings + dots by the card (tilt with it)
+//    bl-shell ::after ........... centre divider ......... z 5
+//
+//  ---------------------------------------------------------------------------
+//  TARGET STRUCTURE  (widget  →  Class)
+//  ---------------------------------------------------------------------------
+//  Page: Employee_Login_Page_New ................. bahri-login-new
+//   └── Layout grid ............................. bl-shell
+//       ├── Container ............................ bl-brand           LEFT
+//       │   ├── Container ........................ bl-brand-top
+//       │   │   ├── Image  (Bahri logo) .......... bl-brand-logo
+//       │   │   └── Text   "MyBahri" ............. bl-brand-wordmark
+//       │   └── Container ........................ bl-brand-copy
+//       │       ├── Text   tagline (italic) ...... bl-brand-title
+//       │       ├── Container .................... bl-announce
+//       │       │   ├── Container ................ bl-announce-head
+//       │       │   │   ├── Text (glyph) ......... bl-announce-badge
+//       │       │   │   ├── Text "Latest at Bahri" bl-announce-label
+//       │       │   │   └── Text category ........ bl-announce-chip
+//       │       │   └── Text   headline .......... bl-announce-text
+//       │       └── Text   paragraph ............. bl-brand-sub
+//       └── Container ............................ bl-panel           RIGHT
+//           └── Container ........................ bl-form   (the glass card)
+//               ├── Container .................... bl-form-head
+//               │   ├── Text "Sign in" ........... bl-title
+//               │   └── Text subtitle ............ bl-subtitle
+//               ├── Validation message ........... bl-error
+//               ├── Container .................... bl-field
+//               │   └── Login id text box ........ bl-input
+//               ├── Container .................... bl-field bl-field-pass
+//               │   ├── Password text box ........ bl-input
+//               │   └── Toggle show password ..... bl-toggle
+//               ├── Sign-in button ............... bl-submit
+//               └── Text   helper line ........... bl-help
+// =============================================================================
+.toggle-password-button {
+    top: 37px;
+}
+
+.bahri-login-new {
+
+    // --------------------------------------------------------------- palette
+    --bl-ink: #123a63;
+    --bl-muted: #5f7396;
+    --bl-blue: #14639f;
+    --bl-cyan: #22a7d0;
+    --bl-brand: #1a93c4;
+    --bl-navy: #0f2743;
+    --bl-info: #0e6f8c;
+    --bl-line: #dce5ee;
+
+    min-height: calc(100vh - 1px); // see the note on .bl-shell
+    font-family: 'Inter', 'Almarai', sans-serif;
+    color: var(--bl-ink);
+    background: #eef6fb; // fills the 1px under the scene (see min-height) in its own wash
+
+    // Clear Mendix's layout inset so the scene reaches every edge.
+    padding: 0 !important;
+    margin: 0 !important;
+
+    >.mx-placeholder,
+    >.mx-placeholder>div,
+    .mx-layoutcontainer,
+    .mx-region {
+        min-height: calc(100vh - 1px); // see the note on .bl-shell
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    // ================================================================= scene
+    .bl-shell {
+        position: relative;
+        z-index: 0; // its own stacking context — every layer below orders in it
+        display: flex;
+        align-items: stretch;
+        // 1px short of 100vh: Mendix sizes its scroll wrapper a hair under the
+        // viewport, and a full-100vh child overflows it by <1px — enough for a
+        // scrollbar at fractional zoom levels. The page background covers the gap.
+        min-height: calc(100vh - 1px);
+        margin: 0;
+        padding: 0 !important;
+        overflow: hidden;
+        // dot texture on top, then the aurora mesh, then the base wash
+        background:
+            radial-gradient(rgba(20, 99, 159, 0.045) 1px, transparent 1.4px) 0 0 / 26px 26px,
+            radial-gradient(52% 46% at 16% 20%, rgba(34, 167, 208, 0.16), transparent 62%),
+            radial-gradient(46% 42% at 88% 14%, rgba(20, 99, 159, 0.13), transparent 64%),
+            radial-gradient(60% 55% at 80% 90%, rgba(26, 147, 196, 0.12), transparent 62%),
+            linear-gradient(135deg, #e9f2fb 0%, #f4f9fd 52%, #eef6fb 100%);
+    }
+
+    // The grid rows and columns sit between the shell and the two panels;
+    // display:contents removes their boxes so bl-brand and bl-panel become
+    // direct flex children of the shell. (Their pseudo-elements still render,
+    // which is what the layers below use.)
+    .bl-shell>.row,
+    .bl-shell>.row>[class*='col-']:not(.bl-brand):not(.bl-panel),
+    .bl-shell>[class*='col-']:not(.bl-brand):not(.bl-panel) {
+        display: contents;
+    }
+
+    // The layout grid is a Bootstrap container whose clearfix makes these
+    // pseudo-elements `display: table`; a table will not stretch between
+    // insets (that is what collapsed the ship and the divider), so every
+    // layer resets its display explicitly.
+    .bl-shell::before,
+    .bl-shell::after,
+    .bl-shell>.row::before,
+    .bl-shell>.row::after {
+        content: '';
+        display: block;
+        position: absolute;
+        pointer-events: none;
+    }
+
+    // ---- blobs: soft brand light behind everything, calm drift (z 1)
+    .bl-shell>.row:nth-child(1)::before,
+    .bl-shell>.row:nth-child(1)::after,
+    .bl-shell>.row:nth-child(2)::before {
+        z-index: 1;
+        border-radius: 50%;
+        filter: blur(70px);
+    }
+
+    .bl-shell>.row:nth-child(1)::before { // blob A
+        width: 520px;
+        height: 520px;
+        top: -120px;
+        left: -80px;
+        opacity: 0.32;
+        background: radial-gradient(circle, rgba(34, 167, 208, 0.5), transparent 68%);
+        animation: bl-drift-a 18s ease-in-out infinite;
+    }
+
+    .bl-shell>.row:nth-child(1)::after { // blob B
+        width: 440px;
+        height: 440px;
+        bottom: -160px;
+        left: 2%;
+        opacity: 0.24;
+        background: radial-gradient(circle, rgba(20, 99, 159, 0.5), transparent 68%);
+        animation: bl-drift-b 22s ease-in-out infinite;
+    }
+
+    .bl-shell>.row:nth-child(2)::before { // blob C
+        width: 340px;
+        height: 340px;
+        top: 34%;
+        left: 30%;
+        opacity: 0.2;
+        background: radial-gradient(circle, rgba(26, 147, 196, 0.5), transparent 68%);
+        animation: bl-drift-c 26s ease-in-out infinite;
+    }
+
+    // ---- the cargo ship (z 2): sails across on a 30s loop and bobs on the swell
+    .bl-shell::before {
+        z-index: 2;
+        left: -200px;
+        bottom: 8%;
+        width: 170px;
+        height: 68px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 120' fill='%23104878' fill-opacity='0.16'%3E%3Cpath d='M18 70 H252 L292 78 L270 96 H44 Q24 96 18 84 Z'/%3E%3Crect x='40' y='44' width='52' height='26' rx='2'/%3E%3Crect x='47' y='50' width='9' height='7' rx='1' opacity='.55'/%3E%3Crect x='61' y='50' width='9' height='7' rx='1' opacity='.55'/%3E%3Crect x='75' y='50' width='9' height='7' rx='1' opacity='.55'/%3E%3Cpath d='M98 44 h16 l-3 -16 h-10 z'/%3E%3Crect x='128' y='52' width='34' height='18' rx='1.5'/%3E%3Crect x='166' y='46' width='40' height='24' rx='1.5'/%3E%3Crect x='210' y='54' width='30' height='16' rx='1.5'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+        transform-origin: 50% 90%;
+        animation: bl-voyage 30s linear infinite, bl-bob 5.5s ease-in-out infinite;
+    }
+
+    // ---- the sea (z 3): a wide wave that laps over the hull and slides slowly
+    .bl-shell>.row:nth-child(2)::after {
+        z-index: 3;
+        left: 0;
+        bottom: 0;
+        width: 200%;
+        height: 34%;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath d='M0 132 Q200 104 400 132 T800 132 T1200 132 T1600 132 V200 H0Z' fill='%2322a7d0' fill-opacity='0.09'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+        animation: bl-sail 11s linear infinite reverse;
+    }
+
+    // ---- centre divider (z 5): the brand content starts at 7% (page margin)
+    // and is up to 440px wide, so this keeps the gap before the seam equal to
+    // that left margin.
+    .bl-shell::after {
+        z-index: 5;
+        top: 16%;
+        bottom: 16%;
+        left: calc(14% + 440px);
+        width: 1px;
+        background: linear-gradient(180deg, transparent, rgba(20, 99, 159, 0.26) 20%, rgba(34, 167, 208, 0.36) 50%, rgba(20, 99, 159, 0.26) 80%, transparent);
+        box-shadow: 0 0 12px rgba(34, 167, 208, 0.16);
+    }
+
+    // ================================================================== LEFT
+    .bl-brand {
+        position: relative;
+        z-index: 4;
+        flex: 1 1 46%;
+        max-width: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 14px; // logo → tagline
+        padding: 6% 4% 6% 7%;
+        color: var(--bl-ink);
+        transition: opacity 0.5s ease; // fades on a successful sign-in
+    }
+
+    // the logo row
+    .bl-brand-top {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 12px; // a little more air under the logo (26px to the tagline)
+        animation: bl-rise 0.7s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+    }
+
+    // The corporate Bahri logo: theme/web/newbahrlogo.png, derived from the
+    // supplied newbahrlogo.jpg (cropped to the artwork, white ground made
+    // transparent) so it sits on the light scene. The image widget's <img> is
+    // hidden — it carries the old artwork. Sized so the emblem is ~80px tall,
+    // as the tile was; the left edge lines up with the tagline below.
+    .bl-brand-logo {
+        position: relative;
+        flex: 0 0 auto;
+        width: 221px !important;
+        height: 92px !important;
+        max-width: none;
+        margin: 0 !important;
+        padding: 0;
+        background: url("newbahrlogo.png") left center / contain no-repeat;
+
+        img {
+            display: none !important;
+        }
+    }
+
+    // the wordmark is part of the logo artwork now
+    .bl-brand-top .bl-brand-wordmark {
+        display: none;
+    }
+
+    // tagline → announcement → paragraph
+    .bl-brand-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 34px;
+        max-width: 440px;
+    }
+
+    // The tagline — italic, gradient, one continuous line.
+    .bl-brand-title {
+        margin: 0;
+        display: block;
+        max-width: 430px;
+        font-size: 27px;
+        font-weight: 500;
+        font-style: italic;
+        line-height: 1.12;
+        letter-spacing: -0.01em;
+        background: linear-gradient(120deg, var(--bl-blue), var(--bl-navy));
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        animation: bl-rise 0.7s cubic-bezier(0.2, 0.8, 0.25, 1) 0.12s both;
+    }
+
+    .bl-brand-sub {
+        margin: 0;
+        display: block;
+        max-width: 430px;
+        font-size: 16.5px;
+        font-weight: 400;
+        line-height: 1.6;
+        color: var(--bl-muted);
+        animation: bl-rise 0.7s cubic-bezier(0.2, 0.8, 0.25, 1) 0.16s both;
+    }
+
+    // copyright is not part of this concept
+    .bl-brand-foot {
+        display: none;
+    }
+
+    // ------------------------------------------- "Latest at Bahri" announcement
+    .bl-announce {
+        position: relative;
+        max-width: 440px;
+        padding: 16px 18px 14px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: linear-gradient(150deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.46));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 14px 34px rgba(15, 39, 67, 0.08);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        animation: bl-rise 0.7s cubic-bezier(0.2, 0.8, 0.25, 1) 0.2s both;
+
+        // gradient accent bar down the left edge
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--bl-cyan), var(--bl-blue));
+        }
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 46px rgba(15, 39, 67, 0.12);
+        }
+
+        // Progress dots. bahri-login-fx.js builds real dots (so the active one
+        // can slide as items rotate); until it has, this static row stands in.
+        &::after {
+            content: '';
+            display: block;
+            margin-top: 12px;
+            width: 49px;
+            height: 6px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='49' height='6'%3E%3Cdefs%3E%3ClinearGradient id='g'%3E%3Cstop offset='0' stop-color='%2322a7d0'/%3E%3Cstop offset='1' stop-color='%2314639f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='16' height='6' rx='3' fill='url(%23g)'/%3E%3Ccircle cx='24' cy='3' r='3' fill='%2314639f' fill-opacity='0.2'/%3E%3Ccircle cx='35' cy='3' r='3' fill='%2314639f' fill-opacity='0.2'/%3E%3Ccircle cx='46' cy='3' r='3' fill='%2314639f' fill-opacity='0.2'/%3E%3C/svg%3E") left center no-repeat;
+        }
+
+        &.bl-has-dots::after {
+            display: none;
+        }
+    }
+
+    .bl-announce-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    // The badge is a dynamictext carrying a placeholder glyph; hide the glyph
+    // and paint the bell on the gradient tile.
+    .bl-announce-badge {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        flex: none;
+        font-size: 0;
+        line-height: 0;
+        color: transparent;
+        background:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E") center / 15px no-repeat,
+            linear-gradient(135deg, var(--bl-cyan), var(--bl-blue));
+        box-shadow: 0 4px 10px rgba(20, 99, 159, 0.28);
+    }
+
+    .bl-announce-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--bl-info);
+    }
+
+    .bl-announce-chip {
+        margin-left: auto;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--bl-blue);
+        background: rgba(34, 167, 208, 0.12);
+        border: 1px solid rgba(34, 167, 208, 0.24);
+        padding: 3px 9px;
+        border-radius: 999px;
+        transition: opacity 0.4s ease;
+    }
+
+    .bl-announce-text {
+        margin: 11px 0 0;
+        display: block;
+        min-height: 44px;
+        font-size: 15.5px;
+        line-height: 1.42;
+        font-weight: 500;
+        color: var(--bl-ink);
+        transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.25, 1);
+    }
+
+    // real dots, built by bahri-login-fx.js
+    .bl-announce-dots {
+        display: flex;
+        gap: 5px;
+        margin-top: 12px;
+
+        i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(20, 99, 159, 0.2);
+            transition: all 0.35s ease;
+        }
+
+        i.on {
+            width: 16px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--bl-cyan), var(--bl-blue));
+        }
+    }
+
+    // ================================================================= RIGHT
+    .bl-panel {
+        position: relative;
+        z-index: 4;
+        flex: 1 1 54%;
+        max-width: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        background: transparent;
+        perspective: 1400px; // for the gentle tilt (set by bahri-login-fx.js)
+        // a refused sign-in shakes the whole card assembly (card + rings);
+        // `left` is animated so the tilt/hover transforms are left alone
+        left: 0;
+
+        // Rings and dots framing the card, drawn as one SVG anchored to the
+        // card's centre (the card is 390 × 411, centred in this panel):
+        // two rings off its bottom-right corner, three dots at its edges.
+        // They tilt with the card about the same origin.
+        &::before {
+            content: '';
+            position: absolute;
+            z-index: 0;
+            left: calc(50% - 211px);
+            top: calc(50% - 221.5px);
+            width: 502px;
+            height: 523px;
+            pointer-events: none;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 502 523' fill='none'%3E%3Ccircle cx='332' cy='353' r='169.25' stroke='%2322a7d0' stroke-opacity='0.15' stroke-width='1.5'/%3E%3Ccircle cx='349' cy='370' r='104.25' stroke='%2314639f' stroke-opacity='0.14' stroke-width='1.5'/%3E%3Ccircle cx='4.5' cy='66.5' r='4.5' fill='%2322a7d0' fill-opacity='0.22'/%3E%3Ccircle cx='53.5' cy='3.5' r='3.5' fill='%2314639f' fill-opacity='0.2'/%3E%3Ccircle cx='332' cy='441' r='4' fill='%2314639f' fill-opacity='0.2'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+            transform: rotateX(var(--bl-rx, 0deg)) rotateY(var(--bl-ry, 0deg));
+            transform-origin: 211px 221.5px;
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.25, 1), opacity 0.5s ease;
+        }
+
+
+        &.bl-shake {
+            animation: bl-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+    }
+
+    // The frosted glass card.
+    .bl-form {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 390px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding: 38px 36px;
+        border-radius: 24px;
+        background: linear-gradient(150deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.32));
+        backdrop-filter: blur(22px) saturate(1.5) brightness(1.04);
+        -webkit-backdrop-filter: blur(22px) saturate(1.5) brightness(1.04);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        box-shadow:
+            0 16px 40px rgba(15, 39, 67, 0.1),
+            0 2px 6px rgba(15, 39, 67, 0.05),
+            inset 0 1px 1px rgba(255, 255, 255, 1),
+            inset 0 -2px 6px rgba(255, 255, 255, 0.35),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+        color: var(--bl-ink);
+        // tilt (rotate, from bahri-login-fx.js) and hover lift (translate) are
+        // separate properties so each keeps its own timing
+        transform: rotateX(var(--bl-rx, 0deg)) rotateY(var(--bl-ry, 0deg));
+        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.25, 1), translate 0.22s ease-out, box-shadow 0.22s ease-out, opacity 0.45s ease, scale 0.45s cubic-bezier(0.2, 0.8, 0.25, 1);
+        // `backwards`, not `both`: once the entrance has played, opacity must
+        // be free for the leaving transition below
+        animation: bl-fade 0.8s ease 0.2s backwards;
+
+        // specular reflection: a bright streak + a soft corner sheen
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                linear-gradient(114deg, rgba(255, 255, 255, 0) 4%, rgba(255, 255, 255, 0.6) 9%, rgba(255, 255, 255, 0) 15%),
+                linear-gradient(150deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 44%);
+        }
+
+        // crisp glass rim
+        &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            pointer-events: none;
+            z-index: 0;
+            box-shadow:
+                inset 0 2px 1px rgba(255, 255, 255, 0.98),
+                inset 0 -2px 4px rgba(255, 255, 255, 0.4),
+                inset 2px 0 4px rgba(255, 255, 255, 0.28),
+                inset -2px 0 4px rgba(255, 255, 255, 0.28);
+        }
+
+        // Content rides above the reflection. Mendix wraps the header and the
+        // helper line in display:contents divs, so those two are named too.
+        >*,
+        .bl-form-head,
+        .row-center {
+            position: relative;
+            z-index: 1;
+        }
+
+        &:hover {
+            translate: 0 -4px;
+            box-shadow:
+                0 24px 50px rgba(15, 39, 67, 0.14),
+                0 8px 20px rgba(20, 99, 159, 0.09),
+                inset 0 1px 1px rgba(255, 255, 255, 1),
+                inset 0 -2px 6px rgba(255, 255, 255, 0.35),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+        }
+
+        // Mendix form groups / text-box wrappers carry their own margins.
+        >*,
+        .form-group,
+        .mx-textbox,
+        .mx-dataview,
+        .mx-dataview-content {
+            margin: 0 !important;
+        }
+
+        // The validation slot is an empty box until there is an error, and an
+        // empty flex item still takes a gap. display:contents makes only the
+        // message itself (shown/hidden by Mendix) a flex item.
+        >.form-group {
+            display: contents;
+        }
+
+        // spacing as in the reference: header →34→ field →16→ field →18→ button
+        >.bl-field:not(.bl-field-pass) {
+            margin-top: 16px !important;
+        }
+
+        >.bl-field-pass {
+            margin-top: -2px !important;
+        }
+
+        // the helper line's container carries Atlas's "center align as a row"
+        .row-center {
+            justify-content: flex-start !important;
+        }
+    }
+
+    .bl-form-head {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .bl-title {
+        margin: 0;
+        display: block;
+        font-size: 25px;
+        font-weight: 500;
+        line-height: 1.2;
+        text-align: left;
+        color: var(--bl-ink);
+    }
+
+    .bl-subtitle {
+        margin: 0;
+        display: block;
+        font-size: 14px;
+        line-height: normal;
+        text-align: left;
+        color: var(--bl-muted);
+    }
+
+    // ------------------------------------------------------------ the fields
+    .bl-field {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin: 0 !important;
+
+        label,
+        .control-label {
+            margin: 0 0 6px !important;
+            width: auto;
+            padding: 0;
+            font-size: 12.5px;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            line-height: 1.2;
+            text-align: left;
+            color: var(--bl-ink);
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        // the label reacts to focus
+        &:focus-within label,
+        &:focus-within .control-label {
+            color: var(--bl-brand);
+            transform: translateY(-1px);
+        }
+    }
+
+    .bl-input {
+        margin: 0 !important;
+    }
+
+    // `user-inputs` from the existing theme paints these light blue with no
+    // border and outranks a plain class selector, so background/border are forced.
+    .bl-input input,
+    input.bl-input {
+        flex: 0 0 auto;
+        width: 100%;
+        height: 46px;
+        padding: 0 14px;
+        border: 1px solid #cfdcea !important;
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.78) !important;
+        box-shadow: inset 0 1px 2px rgba(15, 39, 67, 0.05);
+        font-size: 14.5px;
+        color: var(--bl-ink);
+        transition: border-color 0.2s ease, box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.25, 1), transform 0.22s ease, background 0.2s ease;
+
+        &::placeholder {
+            color: #a7b6c7;
+        }
+
+        // focus/typing: eases up with a soft ring and brighter fill
+        &:focus {
+            outline: none;
+            border-color: var(--bl-brand) !important;
+            background: rgba(255, 255, 255, 0.97) !important;
+            box-shadow: 0 0 0 4px rgba(34, 167, 208, 0.15), 0 8px 18px rgba(20, 99, 159, 0.1) !important;
+            transform: translateY(-2px);
+        }
+
+        // Chrome autofill covers the glass with its own colour; force it back.
+        &:-webkit-autofill,
+        &:-webkit-autofill:hover,
+        &:-webkit-autofill:focus,
+        &:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            box-shadow: 0 0 0 1000px #ffffff inset !important;
+            -webkit-text-fill-color: var(--bl-ink) !important;
+            caret-color: var(--bl-ink);
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        &:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset, 0 0 0 4px rgba(34, 167, 208, 0.15) !important;
+            box-shadow: 0 0 0 1000px #ffffff inset, 0 0 0 4px rgba(34, 167, 208, 0.15) !important;
+        }
+    }
+
+    // Room for the show/hide control inside the password field.
+    .bl-field-pass .bl-input input,
+    .bl-field-pass input.bl-input {
+        padding-right: 58px;
+    }
+
+    // The show/hide-password widget: a 24px button holding two stacked <img>s
+    // that it cross-fades (.icon-show is the one visible while the password is
+    // hidden). Its stock artwork is a heavy black glyph, so each image is
+    // collapsed to its padding box and a thin outline icon in the brand blue is
+    // painted there instead — the widget's own toggling is untouched.
+    .bl-field-pass .toggle-password-button {
+        top: 32px; // centred on the 46px input (label 15px + 6px below it)
+        right: 13px;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        opacity: 0.85;
+        transition: opacity 0.15s ease, transform 0.22s ease;
+
+        &:hover {
+            opacity: 1;
+        }
+
+        img {
+            width: 0 !important;
+            height: 0 !important;
+            padding: 12px;
+            box-sizing: border-box;
+            background-position: center;
+            background-size: 18px 18px;
+            background-repeat: no-repeat;
+        }
+
+        // password hidden → "eye-off": click to reveal
+        img.icon-show {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314639f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24'/%3E%3Cline x1='1' y1='1' x2='23' y2='23'/%3E%3C/svg%3E");
+        }
+
+        // password shown → "eye": click to hide again
+        img.icon-hide {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314639f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");
+        }
+    }
+
+    // the input lifts 2px on focus; keep the toggle riding with it
+    .bl-field-pass:focus-within .toggle-password-button {
+        transform: translateY(-2px);
+    }
+
+    // ------------------------------------------------------------ validation
+    .bl-error {
+        margin: 0;
+        padding: 11px 14px;
+        border: 1px solid #f2c4c4;
+        border-left: 3px solid #c0392b;
+        border-radius: 8px;
+        background: #fdf1f0;
+        color: #97281c;
+        font-size: 14px;
+        line-height: 1.45;
+
+        &:empty {
+            display: none;
+        }
+    }
+
+    // ---------------------------------------------------------------- button
+    .bl-submit {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: 46px;
+        margin: 0;
+        border: 0;
+        border-radius: 11px;
+        background: linear-gradient(135deg, var(--bl-cyan) 0%, var(--bl-blue) 100%);
+        color: #ffffff !important;
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(20, 99, 159, 0.18);
+        transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.15s ease;
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -60%;
+            width: 40%;
+            height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+            transform: skewX(-18deg);
+            transition: none;
+        }
+
+        &:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 7px 16px rgba(20, 99, 159, 0.22);
+            filter: brightness(1.04);
+
+            &::before {
+                animation: bl-sheen 0.7s ease;
+            }
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(20, 99, 159, 0.2);
+        }
+
+        &:disabled {
+            opacity: 0.65;
+            cursor: default;
+        }
+    }
+
+    .bl-help {
+        margin: 0;
+        display: block;
+        font-size: 13px;
+        line-height: normal;
+        text-align: left;
+        color: var(--bl-muted);
+    }
+
+    // ---------------------------------------------- leaving: sign-in submitted
+    // bahri-login-fx.js adds .bl-leaving as the form is submitted: the card
+    // settles back and dissolves, the brand copy and rings fade, and only the
+    // living scene (light, sea, ship) remains — which is what the hand-off
+    // curtain on the next load carries on from. Removed again if the sign-in
+    // is refused.
+    &.bl-leaving {
+        .bl-form {
+            opacity: 0;
+            scale: 0.97;
+            pointer-events: none;
+        }
+
+        .bl-brand,
+        .bl-panel::before {
+            opacity: 0;
+        }
+    }
+
+    // ------------------------------------------------------------ responsive
+    // Every other screen size — wide monitors, narrow desktops, tablet and
+    // phone — is handled in gs-bahri/atom-gs-responsive.scss, section 7,
+    // which loads after this file.
+}
+
+// ============================================================== animations ===
+@keyframes bl-rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bl-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+// the ship crosses the whole scene …
+@keyframes bl-voyage {
+    from { left: -200px; }
+    to   { left: calc(100% + 60px); }
+}
+
+// … while riding the swell: rise/fall with a slight roll
+@keyframes bl-bob {
+    0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+    50%      { transform: translateY(-7px) rotate(1.2deg); }
+}
+
+@keyframes bl-sail {
+    to { transform: translateX(-50%); }
+}
+
+@keyframes bl-drift-a {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(40px, 30px) scale(1.08); }
+}
+
+@keyframes bl-drift-b {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(-36px, -24px) scale(1.1); }
+}
+
+@keyframes bl-drift-c {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(-30px, 26px) scale(1.06); }
+}
+
+@keyframes bl-sheen {
+    from { left: -60%; }
+    to   { left: 130%; }
+}
+
+// a refused sign-in: short horizontal shake of the card assembly
+@keyframes bl-shake {
+    10%, 90%      { left: -1px; }
+    20%, 80%      { left: 2px; }
+    30%, 50%, 70% { left: -4px; }
+    40%, 60%      { left: 4px; }
+}
+
+// ========================================================== sign-in hand-off
+// Mendix reloads the client after a successful sign-in. index.html sets
+// html.bl-handoff before the first paint when bahri-login-fx.js has flagged a
+// sign-in, which raises this curtain in the login's own light over the reload
+// (no white flash, no loader); once the home page is on screen the script
+// fades the curtain away while the page rises into place.
+html.bl-handoff::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    pointer-events: none;
+    background:
+        radial-gradient(rgba(20, 99, 159, 0.045) 1px, transparent 1.4px) 0 0 / 26px 26px,
+        radial-gradient(52% 46% at 16% 20%, rgba(34, 167, 208, 0.16), transparent 62%),
+        radial-gradient(46% 42% at 88% 14%, rgba(20, 99, 159, 0.13), transparent 64%),
+        radial-gradient(60% 55% at 80% 90%, rgba(26, 147, 196, 0.12), transparent 62%),
+        linear-gradient(135deg, #e9f2fb 0%, #f4f9fd 52%, #eef6fb 100%);
+    transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+html.bl-handoff.bl-handoff-out::before {
+    opacity: 0;
+}
+
+.mx-page.bl-enter {
+    animation: bl-page-enter 0.7s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+
+@keyframes bl-page-enter {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+}
+
+// Reduced motion, as the reference: the ambient blobs hold still (the script
+// also stops rotating the announcement).
+@media (prefers-reduced-motion: reduce) {
+    .bahri-login-new {
+        .bl-shell>.row::before,
+        .bl-shell>.row:nth-child(1)::after {
+            animation: none !important;
+        }
+    }
+}

@@ -2,6 +2,7 @@ import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { layout } from '../data/dashboardData.js';
 import { WidgetWrapper, MxImage, MxButton } from './MxWidgets.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { useScreen } from '../nav/ScreenContext.jsx';
 import MoodCheckin from './MoodCheckin.jsx';
 import PopupMenu from './PopupMenu.jsx';
 
@@ -25,8 +26,18 @@ import PopupMenu from './PopupMenu.jsx';
 export default function NewLayout({ children }) {
   /* gsSidebarToggleJs: toggles .gs-sidebar-expanded on .gs-bahri-layout */
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  /* gsSidebarToggleJs1: moves .is-active between .gs-nav-item elements */
-  const [activeNav, setActiveNav] = useState(layout.nav.findIndex((n) => n.active));
+
+  /*
+   * gsSidebarToggleJs1 moves .is-active between the .gs-nav-item elements while
+   * each item's own Action opens a page. Both are the same thing here: the
+   * screen a nav item opens is also what marks it active, so the class can
+   * never drift from the page on screen.
+   *
+   * `pageClass` is the Mendix page's own Class. The client puts it on the same
+   * root element as the layout's, which is what lets atom-service-gs.scss reach
+   * .gs-main-layout and .gs-content-area from inside .gs-service-page.
+   */
+  const { screen, openScreen, pageClass } = useScreen();
   /* gs-mood-checkin.js: the header emoji toggles the daily check-in popup */
   const [moodOpen, setMoodOpen] = useState(false);
   const moodRef = useRef(null);
@@ -55,7 +66,11 @@ export default function NewLayout({ children }) {
 
   return (
     <div
-      className={'mx-page gs-bahri-layout' + (sidebarExpanded ? ' gs-sidebar-expanded' : '')}
+      className={
+        'mx-page gs-bahri-layout' +
+        (sidebarExpanded ? ' gs-sidebar-expanded' : '') +
+        (pageClass ? ' ' + pageClass : '')
+      }
       data-focusindex="0"
     >
       <div className="mx-placeholder">
@@ -74,6 +89,19 @@ export default function NewLayout({ children }) {
 
               <div className="mx-name-gsHeaderActions gs-header-actions">
 
+                {/* Widget order inside gs-header-actions is the layout's own:
+                    mood, grayscale (+ its script), weather, card, bell, user menu. */}
+
+                {/* No action in the model: the Mendix script binds this click by
+                    delegation, so the DOM carries no role or tabindex. */}
+                <div
+                  ref={moodRef}
+                  className="mx-name-gsHeaderMood gs-header-mood"
+                  onClick={() => setMoodOpen((v) => !v)}
+                >
+                  <MxImage name="gsHeaderMoodIcon" className="gs-header-mood-icon" src="Main$gs_image$gs_hdr_mood.svg" />
+                </div>
+
                 {/* Icon-only action button with On click "Do nothing"; gsGrayscaleJs binds the
                     click and sets aria-pressed, aria-label and the title at runtime. */}
                 <MxButton
@@ -88,16 +116,6 @@ export default function NewLayout({ children }) {
                 />
                 {/* javascriptsnippet mount point; the widget renders it with display: contents. */}
                 <div className="gsGrayscaleJs" style={{ display: 'contents' }} />
-
-                {/* No action in the model: the Mendix script binds this click by
-                    delegation, so the DOM carries no role or tabindex. */}
-                <div
-                  ref={moodRef}
-                  className="mx-name-gsHeaderMood gs-header-mood"
-                  onClick={() => setMoodOpen((v) => !v)}
-                >
-                  <MxImage name="gsHeaderMoodIcon" className="gs-header-mood-icon" src="Main$gs_image$gs_hdr_mood.svg" />
-                </div>
 
                 <div className="mx-name-gsHeaderWeather gs-header-weather">
                   <MxImage name="gsHeaderWeatherIcon" className="gs-header-weather-icon" src="Main$gs_image$gs_hdr_weather.svg" />
@@ -195,15 +213,23 @@ export default function NewLayout({ children }) {
               <div className="mx-name-topSidebarLeft top-sidebar-left">
 
                 <div className="mx-name-gsNav gs-nav">
-                  {layout.nav.map((item, i) => (
+                  {layout.nav.map((item) => (
                     <div
                       key={item.name}
-                      className={`mx-name-${item.name} gs-nav-item${i === activeNav ? ' is-active' : ''}`}
-                      /* gsNavEngagement is the only nav item with an Action, so it is
-                         the only one Mendix makes focusable. */
-                      tabIndex={item.name === 'gsNavEngagement' ? 0 : undefined}
-                      role={item.name === 'gsNavEngagement' ? 'button' : undefined}
-                      onClick={() => setActiveNav(i)}
+                      className={`mx-name-${item.name} gs-nav-item${
+                        item.screen === screen ? ' is-active' : ''
+                      }`}
+                      /* Every nav item carries an Action, so Mendix makes every
+                         one of them focusable. */
+                      tabIndex={0}
+                      role="button"
+                      onClick={() => openScreen(item.screen)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openScreen(item.screen);
+                        }
+                      }}
                     >
                       <MxImage name={`${item.name}Icon`} className="gs-nav-icon" src={`Main$gs_image$${item.icon}.svg`} />
                       <div className={`mx-name-${item.name}Text gs-nav-text`}>

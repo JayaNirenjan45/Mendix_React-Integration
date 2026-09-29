@@ -76,11 +76,30 @@ export default defineConfig(({ mode }) => {
   const isLocalRuntime = ['localhost', '127.0.0.1', '[::1]'].includes(mendixHost);
   const devHost = env.REACT_DEV_HOST || (isLocalRuntime ? mendixHost : 'localhost');
 
+  /*
+   * Serving React on a name of its own is a deliberate choice, so setting
+   * REACT_DEV_HOST is an opt-out rather than a mistake - but it does cost the
+   * shared session, and silently is the wrong way to lose it. What breaks is
+   * only the SHARING: React still gets its own Mendix session through the
+   * proxy, because the browser attributes Set-Cookie to the host it asked for.
+   * Opening the Mendix app directly at localhost:8080 is then a second,
+   * separate session.
+   */
   if (isLocalRuntime && devHost !== mendixHost) {
-    throw new Error(
-      `React (${devHost}) and Mendix (${mendixHost}) are on different hostnames, ` +
-        'so they cannot share a cookie jar or a Mendix session. Drop ' +
-        `REACT_DEV_HOST, or set it to '${mendixHost}'.`
+    if (!env.REACT_DEV_HOST) {
+      throw new Error(
+        `React (${devHost}) and Mendix (${mendixHost}) are on different hostnames, ` +
+          'so they cannot share a cookie jar or a Mendix session. Drop ' +
+          `REACT_DEV_HOST, or set it to '${mendixHost}'.`
+      );
+    }
+
+    console.warn(
+      `\n  NOTE  React is served as '${devHost}' and Mendix runs on ` +
+        `'${mendixHost}'. Cookies are scoped by hostname, so the two no longer\n` +
+        '        share one XASSESSIONID - signing in here does not sign you in at ' +
+        `http://${mendixHost}:8080.\n` +
+        `        '${devHost}' must resolve to 127.0.0.1 (Windows hosts file).\n`
     );
   }
 
@@ -157,20 +176,40 @@ export default defineConfig(({ mode }) => {
    * Printed once at startup so the two things that decide whether login works
    * - where React is served and where Mendix is expected - are never a guess.
    */
+  /* Port 80 is implied in a URL, so printing it gives a non-copyable address. */
+  const origin = `http://${devHost}${port === 80 ? '' : `:${port}`}`;
+
   console.log(
     `\n  Mendix proxy   ${target}` +
-      `\n  React origin   http://${devHost}:${port}   (open this exact host)` +
+      `\n  React origin   ${origin}   (open this exact host)` +
       `\n  Session        ${
-        isLocalRuntime
-          ? 'shared with the Mendix app'
-          : 'cross-site - CORS + SameSite=None cookie required on the deployment'
+        !isLocalRuntime
+          ? 'cross-site - CORS + SameSite=None cookie required on the deployment'
+          : devHost === mendixHost
+            ? 'shared with the Mendix app'
+            : `its own - '${devHost}' and '${mendixHost}' are separate cookie jars`
       }\n`
   );
 
   return {
     plugins: [react(), canonicalHost(devHost, port)],
     server: {
-      host: devHost,
+      /*
+       * Bind to every interface rather than to `devHost` itself. Binding to a
+       * name requires it to resolve already, so a custom REACT_DEV_HOST would
+       * stop the server starting at all until the hosts file has the entry -
+       * and then there is nothing running to tell you that is what is wrong.
+       * The canonicalHost plugin above still redirects anything else to
+       * `devHost`, so the address stays canonical either way.
+       */
+      host: true,
+      /*
+       * Binding to every interface means requests arrive with Host headers vite
+       * does not recognise, and vite answers those 403 by default. Only the
+       * canonical name is allowed through - not `true`, which would serve the
+       * dev server to any name that resolves here.
+       */
+      allowedHosts: [devHost],
       port,
       strictPort: true,
       open: false,

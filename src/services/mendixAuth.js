@@ -1,4 +1,4 @@
-import { endpoints, PERSIST_CSRF } from './mendixConfig.js';
+import { endpoints, LOGIN_BODY_SHAPE, PERSIST_CSRF } from './mendixConfig.js';
 
 /*
  * Tab-scoped storage for the CSRF token, so a reload can rejoin the session
@@ -141,7 +141,14 @@ export async function login(username, password) {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      /*
+       * Wrapped in an array unless told otherwise. Main.IM_LoginReact roots its
+       * paths at `(Array)|(Object)|username`, so a bare object binds nothing and
+       * every sign-in is rejected with an empty 200 - see LOGIN_BODY_SHAPE.
+       */
+      body: JSON.stringify(
+        LOGIN_BODY_SHAPE === 'array' ? [{ username, password }] : { username, password }
+      )
     });
   } catch {
     // Network / DNS / CORS preflight failure - never a credentials problem.

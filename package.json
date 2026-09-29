@@ -10,8 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "antd": "^5.29.3",
+    "dayjs": "^1.11.23",
+    "highcharts": "^11.4.8",
+    "highcharts-react-official": "^3.2.3",
+    "moment": "^2.31.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-datetime": "^3.3.1",
+    "react-dom": "^18.3.1",
+    "react-phone-input-2": "^2.15.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

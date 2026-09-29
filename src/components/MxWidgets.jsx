@@ -55,12 +55,13 @@ export function MxStaticImage({ name, src }) {
  * `title` is the Tooltip property (empty unless set). Any other props, such as
  * ARIA attributes a Mendix snippet adds at runtime, are passed to the <button>.
  */
-export function MxButton({ name, className, style = 'default', icon, iconImage, caption = '', page = 'p.Main.New_Dashboard', title = '', onClick, ...rest }) {
+export function MxButton({ name, className, style = 'default', inlineStyle, icon, iconImage, caption = '', page = 'p.Main.New_Dashboard', title = '', onClick, ...rest }) {
   return (
     <button
       type="button"
       className={`btn mx-button mx-name-${name}${className ? ' ' + className : ''} btn-${style}`}
       title={title}
+      style={inlineStyle}
       data-button-id={`${page}.${name}`}
       data-disabled="false"
       onClick={onClick}

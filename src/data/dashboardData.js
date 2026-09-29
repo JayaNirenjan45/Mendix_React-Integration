@@ -28,12 +28,22 @@ export const layout = {
      logout endpoint instead; this is the address Mendix itself would land on. */
   signOutUrl: MENDIX_APP_URL,
   tickerText: 'Welcome Back! Ammar Al-Nahdi',
+  /*
+   * Every item carries an Action in the layout, so every one is focusable and
+   * reaches a page:
+   *   gsNavHome        ACT_CallDeepLinkHomeWithDefaultHomePage
+   *   gsNavServices    DS_DigitalCardRequest_2(Digital_Card_Request)
+   *   gsNavResources   DS_DigitalCardRequest_2(Drivers)
+   *   gsNavEngagement  DS_DigitalCardRequest_2(Food)
+   *   gsNavMultimedia  ACT_RedirectToAbsenceRequestPage_2(Absence_Request)
+   * `screen` is the key those microflows resolve to here (nav/ScreenContext.jsx).
+   */
   nav: [
-    { name: 'gsNavHome', icon: 'one', title: 'MyBahri', sub: 'Homepage', active: true },
-    { name: 'gsNavServices', icon: 'two', title: 'Services', sub: 'Self Service', active: false },
-    { name: 'gsNavResources', icon: 'three', title: 'Resources', sub: 'Files', active: false },
-    { name: 'gsNavEngagement', icon: 'four', title: 'Engagement Hub', sub: 'Employee Engagement', active: false },
-    { name: 'gsNavMultimedia', icon: 'five', title: 'Multimedia', sub: 'Insight', active: false }
+    { name: 'gsNavHome', icon: 'one', title: 'MyBahri', sub: 'Homepage', screen: 'home' },
+    { name: 'gsNavServices', icon: 'two', title: 'Digital Card', sub: 'ID card request', screen: 'digitalCard' },
+    { name: 'gsNavResources', icon: 'three', title: 'Drivers', sub: 'Business trips', screen: 'drivers' },
+    { name: 'gsNavEngagement', icon: 'four', title: 'Catering', sub: 'Food & refreshments', screen: 'food' },
+    { name: 'gsNavMultimedia', icon: 'five', title: 'Absence', sub: 'Annual leave', screen: 'absence' }
   ]
 };
 

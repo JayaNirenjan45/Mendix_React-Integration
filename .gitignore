@@ -5,3 +5,7 @@ dist
 # Local runtime configuration (see .env.example)
 .env
 .env.local
+
+# Duplicate copies left behind by file sync (byte-identical to the originals)
+*_1.*
+*_1

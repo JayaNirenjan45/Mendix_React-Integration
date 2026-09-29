@@ -1,7 +1,365 @@
-// Background images for the dashboard, as declared at the end of the Mendix
-// theme/web/atom-bahri-imagedirect.scss. The SVGs sit next to this file, as they
-// do in Mendix. Load this before atom-gs.scss (see main.jsx): the `background`
-// shorthand resets position, repeat and size, which atom-gs.scss then sets.
+//For Mobile Screens
+
+@media (max-width: 600px) {
+  .mx-progress {
+    background-image: url(progress-indicator.gif);
+    background-position: center;
+    background-size: contain;
+    width: 69px;
+    height: 69px;
+    background-color: transparent !important;
+
+    .mx-progress-message,
+    .mx-progress-indicator {
+      display: none;
+    }
+  }
+
+  .card-gold-1A-wb {
+    .mx-icon-lined.mx-icon-trash-can::before {
+      content: "";
+      background-image: url(delete-red-mv.svg);
+      background-size: 169%;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: block;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .sm-form-comment {
+    .mx-icon-lined.mx-icon-trash-can::before {
+      content: "";
+      background-image: url(delete-red-mv.svg);
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: block;
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  .hide-deskx {
+    .comment-delete_btn {
+      background-color: transparent !important;
+      padding: 0px !important;
+
+      .mx-icon-lined.mx-icon-trash-can::before {
+        content: "";
+        background-image: url(delete-red-mv.svg);
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        display: block;
+        width: 36px;
+        height: 36px;
+      }
+    }
+  }
+
+  .widget-accordion .widget-accordion-group>.widget-accordion-group-header>.widget-accordion-group-header-button {
+    cursor: auto;
+    padding: 16px 0px;
+  }
+
+  .employees-layout .common-task-tabs .request-sub-content .multiple-select {
+    width: 100% !important;
+    margin: 0px !important;
+    padding: 0px !important;
+  }
+
+  .att-ornew {
+
+    .mx-link,
+    .mx-text {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #ff681d !important;
+
+      &::before {
+        content: "";
+        display: block;
+        background-image: url(org-attachment.svg);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  select.form-control {
+    background-image: url(help-icon.svg);
+  }
+
+  .widget-accordion-group-header-button-icon {
+    background-image: url(help-icon.svg);
+    display: block;
+    width: 24px;
+    height: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    margin-right: 12px;
+
+    path {
+      display: none;
+    }
+  }
+
+  button.multiselect .caret {
+    // background-image: url(help-icon.svg);
+    // display: block;
+    // width: 24px;
+    // font-size: 0px;
+    // height: 24px;
+  }
+
+  .ant-picker-suffix {
+    .anticon-calendar {
+      display: block;
+      width: 16px;
+      height: 16px;
+      background-image: url(nobile-calendar.svg);
+
+      svg {
+        display: none;
+      }
+    }
+  }
+
+  .hide-deskx {
+
+    .cybersecurity-accordian .widget-accordion-group-collapsed>.widget-accordion-group-header>.widget-accordion-group-header-button .widget-accordion-group-header-button-icon,
+    .cybersecurity-accordian .widget-accordion-group>.widget-accordion-group-header>.widget-accordion-group-header-button .widget-accordion-group-header-button-icon {
+      background-image: url(help-icon.svg);
+    }
+  }
+
+  .cybersecurity-accordian .widget-accordion-group-collapsed>.widget-accordion-group-header>.widget-accordion-group-header-button .widget-accordion-group-header-button-icon,
+  .cybersecurity-accordian .widget-accordion-group>.widget-accordion-group-header>.widget-accordion-group-header-button .widget-accordion-group-header-button-icon {
+    background-image: url(help-icon.svg);
+  }
+
+  .hide-deskx {
+    .common-select .form-group select {
+      background-image: url(help-icon.svg);
+    }
+  }
+
+  .mx-icon-add.mx-groupbox-collapse-icon {
+    background-image: url(help-icon.svg);
+    width: 24px;
+    height: 24px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    &::before {
+      font-size: 0px;
+    }
+  }
+
+  .mx-icon-substract.mx-groupbox-collapse-icon {
+    background-image: url(help-icon.svg);
+    width: 24px;
+    height: 24px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    transform: rotate(180deg);
+
+    &::before {
+      font-size: 0px;
+    }
+  }
+
+  .eye-button {
+    svg {
+      display: block;
+      width: 19px;
+      height: 20px;
+      background-position: center;
+      background-repeat: no-repeat;
+      // background-image: url(org-eye.svg);
+
+      path {
+        // display: none;
+      }
+    }
+  }
+
+  .bahri-flex-btn-end {
+    .bahri-delete-btn {
+      background-image: url(delete-white.svg);
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: 45%;
+      min-width: 48px !important;
+      width: 48px !important;
+      background-color: #ff283c !important;
+    }
+  }
+
+  .media-search-bar input {
+    background-image: url(search-icn.svg);
+    background-repeat: no-repeat;
+    background-size: 6% 69%;
+    background-position: calc(0% - -10px);
+    padding-left: 32px !important;
+  }
+
+  .btn3-cont .d-red.del {
+    background-image: url(delete-red-mv.svg);
+    background-color: transparent !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 38px;
+    width: 120px;
+    border-radius: 8px;
+    border: 1px solid #777777;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      display: none;
+    }
+  }
+
+  .mv-fg .calender-container .mx-compound-control .mx-button,
+  .mv-cmt .calender-container .mx-compound-control .mx-button {
+    background: url(calender-mv.svg);
+    background-image: url(calender-mv.svg);
+    background-repeat: no-repeat;
+    background-size: contain;
+  }
+}
+
+// For Desktop
+
+@media (min-width: 600px) {
+  .calender-container .common-calender .mx-compound-control .mx-button {
+    background-image: url(calendarweb.svg) !important;
+  }
+
+  .mob-web {
+    .form-control {
+      background-image: url(phone-icnweb.svg);
+      background-repeat: no-repeat;
+      background-position: right;
+      background-size: 6% 100%;
+    }
+  }
+}
+
+.web-theme-cyan,
+.theme-cyan {
+  .rcw-conversation-container .rcw-close-button {
+    background-color: transparent;
+  }
+
+  .rcw-response {
+    position: relative;
+
+    img {
+      display: none;
+    }
+
+    .rcw-message-text {
+      margin-left: 58px !important;
+      background-color: white;
+      box-shadow: 0px 0px 6px 0px #0000000d;
+      color: white;
+      border-radius: 10px;
+    }
+
+    &::before {
+      content: "";
+      display: block;
+      width: 42px;
+      height: 42px;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-image: url(cyanchat-logobtn.svg);
+      margin: 0px 8px;
+      position: absolute;
+      top: 6px;
+    }
+  }
+
+  .rcw-message {
+    img {
+      display: none;
+    }
+  }
+
+  .rcw-launcher.rcw-hide-sm,
+  .trigger-chat-bot-close {
+    background-color: transparent;
+    border-radius: unset;
+    box-shadow: unset;
+    height: 60px;
+    margin-top: 10px;
+    width: 60px;
+
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-image: url(cyanchat-xbtn.svg) !important;
+
+    img {
+      display: none !important;
+    }
+  }
+
+  .trigger-chat-bot-open {
+    background-color: transparent;
+    border-radius: unset;
+    box-shadow: unset;
+    height: 60px;
+    margin-top: 10px;
+    width: 60px;
+
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-image: url(cyanchat-logobtn.svg) !important;
+
+    img {
+      display: none !important;
+    }
+  }
+
+  // .rcw-launcher {
+  //   background-color: transparent;
+  //   border-radius: unset;
+  //   box-shadow: unset;
+  //   height: 60px;
+  //   margin-top: 10px;
+  //   width: 60px;
+
+  //   background-position: center;
+  //   background-repeat: no-repeat;
+  //   background-size: contain;
+  //   background-image: url(cyanchat-logobtn.svg);
+
+  //   img {
+  //     display: none;
+  //   }
+  // }
+}
+
+body.theme-ramadan {
+  background-image: url(ramadan-loginbg.svg);
+}
 
 .gs-bahri-layout .empofthe-mnth {
   background: url(EmployeeOfMonth.svg);

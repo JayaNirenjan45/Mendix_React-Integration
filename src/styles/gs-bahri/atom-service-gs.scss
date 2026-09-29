@@ -1,0 +1,3150 @@
+// =============================================================================
+//  gs-bahri — employee service request pages
+//
+//  Scoped entirely under .gs-service-page, which is set as the page Class on:
+//      DigitalCard.DigitalCardRequest       (+ .gs-svc-idcard)
+//      CorporateAdmin.DriverRequest         (+ .gs-svc-car)
+//      CorporateAdmin.FoodRequest           (+ .gs-svc-food)
+//      EmployeeSelfServices.Absence_AnnualLeave (+ .gs-svc-calendar)
+//
+//  Replicates the `.design-reference-bahri` shell of the Bahri reference site.
+//  Flexbox only — no grid. Literal colours only — no variables, no :root.
+//  Icons are inline data-URI SVGs, so nothing is added to any image collection.
+// =============================================================================
+
+.gs-service-page {
+    background: #eef3f8;
+    color: #3f5069;
+
+    // --------------------------------------------------- cross-page alignment
+    // Drivers and Catering wrap their content in an extra container carrying
+    // Atlas inner-spacing design properties, which Digital Card and Absence do
+    // not have. Left alone it insets those two pages by 16px a side, so their
+    // header and card are narrower than the other two. Atlas declares those
+    // paddings !important, hence the same here.
+    .employees-layout>.font-bold {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    // The reference caps its .content at max-width 1180px and centres it
+    // (flex:1; min-width:0; max-width:1180px; margin:0 auto). Every service
+    // page's content wrapper is pinned to the same, so all four read like the
+    // reference instead of stretching the full width. Catering's stray `card`
+    // padding is zeroed here too.
+    .employees-layout {
+        width: 100%;
+        max-width: 1180px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    // Absence puts its form and balance panel in a layout grid, and the grid
+    // column's 8px gutter pushed the card off the page header. The other three
+    // pages have no such column, so this only affects Absence.
+    [class*='col-']:has(> .gs-svc-form) {
+        padding-left: 0;
+    }
+
+    // Absence's form and balance panel share a row. The reference splits them
+    // 1.55fr / 0.95fr side by side and collapses to one column under 1080px,
+    // which is reproduced here in flex. The selector matches only the row that
+    // directly holds the form card, so the two-column field grids inside the
+    // form are left alone.
+    .row:has(> [class*='col-'] > .gs-svc-form) {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 20px;
+
+        >[class*='col-'] {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        // the form
+        >[class*='col-']:has(> .gs-svc-form) {
+            flex: 1.55 1 0;
+            min-width: 0;
+        }
+
+        // the balance panel
+        >[class*='col-']:not(:has(> .gs-svc-form)) {
+            flex: 0.95 1 300px;
+            min-width: 0;
+        }
+
+    }
+
+    // ------------------------------------------------------------- page head
+    .gs-svc-head {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+
+        &::before {
+            content: '';
+            display: flex;
+            flex: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background-color: #1478b0;
+            background-image: linear-gradient(135deg, #22a7d0 0%, #14639f 100%);
+            background-repeat: no-repeat;
+            background-position: center;
+            // Single-layer fallback; each page variant re-declares both layers
+            // (glyph on top, gradient beneath) with its own per-layer sizes.
+            background-size: cover;
+            box-shadow: 0 6px 16px rgba(20, 99, 159, 0.26);
+        }
+
+        .common-mini_header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            flex: 1;
+            min-width: 0;
+            // The subtitle is wrapped onto its own row below the title, and the
+            // reference leaves it 2px under (styles.css: .page-sub{margin:2px 0 0}),
+            // so the two read as one block. The 10px stays as the column gap.
+            gap: 2px 10px;
+            margin-bottom: 0;
+
+            h2,
+            .font-bold {
+                font-size: 27px;
+                font-weight: 800;
+                letter-spacing: -0.02em;
+                color: #123a63;
+                margin: 0;
+            }
+        }
+
+        // The subtitle is a sibling of the title and the avatar inside
+        // .common-mini_header, so flex order puts it on its own second line
+        // instead of splitting title from avatar.
+        .gs-svc-head-sub {
+            order: 2;
+            flex: 0 0 100%;
+            font-size: 14px;
+            font-weight: 400;
+            color: #8094ac;
+        }
+
+        .employee-circle {
+            order: 1;
+            flex: none;
+            width: 40px;
+            height: 40px;
+        }
+    }
+
+    // Layer order matters: the first background paints on top, so the white
+    // glyph must precede the gradient in every variant, with per-layer sizes.
+    &.gs-svc-idcard .gs-svc-head::before {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='5' width='19' height='14' rx='2.5'/%3E%3Ccircle cx='8.5' cy='11' r='2.1'/%3E%3Cpath d='M5.2 16.2a3.6 3.6 0 0 1 6.6 0'/%3E%3Cpath d='M14.5 10h4.2M14.5 13.6h4.2'/%3E%3C/svg%3E"),
+            linear-gradient(135deg, #22a7d0 0%, #14639f 100%);
+        background-size: 26px 26px, cover;
+    }
+
+    &.gs-svc-car .gs-svc-head::before {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13.2 5 8.4A2.2 2.2 0 0 1 7 7h10a2.2 2.2 0 0 1 2 1.4l2 4.8V18H3z'/%3E%3Cpath d='M3 14.5h18'/%3E%3Ccircle cx='7.4' cy='16' r='1.25'/%3E%3Ccircle cx='16.6' cy='16' r='1.25'/%3E%3Cpath d='M6.5 18v2M17.5 18v2'/%3E%3C/svg%3E"),
+            linear-gradient(135deg, #22a7d0 0%, #14639f 100%);
+        background-size: 26px 26px, cover;
+    }
+
+    &.gs-svc-food .gs-svc-head::before {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 3v6.2A2.8 2.8 0 0 0 6.8 12H7v9'/%3E%3Cpath d='M7 3v6'/%3E%3Cpath d='M10 3v6.2A2.8 2.8 0 0 1 7.2 12'/%3E%3Cpath d='M17.5 3c-1.6 1.1-2.4 3-2.4 5.4 0 2 .8 3.2 2.4 3.6V21'/%3E%3C/svg%3E"),
+            linear-gradient(135deg, #22a7d0 0%, #14639f 100%);
+        background-size: 26px 26px, cover;
+    }
+
+    &.gs-svc-calendar .gs-svc-head::before {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='17' rx='2.4'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3 9.8h18'/%3E%3Cpath d='M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2'/%3E%3C/svg%3E"),
+            linear-gradient(135deg, #22a7d0 0%, #14639f 100%);
+        background-size: 26px 26px, cover;
+    }
+
+    // ------------------------------------------------------------- status chip
+    .gs-svc-chip {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-left: auto;
+        padding: 7px 14px;
+        border: 1px solid rgba(14, 111, 140, 0.28);
+        border-radius: 999px;
+        background: #e7f5f9;
+        color: #0e6f8c;
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+
+        &::before {
+            content: '';
+            display: flex;
+            flex: none;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+    }
+
+    // ------------------------------------------------------------- form card
+    .gs-svc-form {
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(15, 39, 67, 0.05), 0 2px 8px rgba(15, 39, 67, 0.05);
+        overflow: hidden;
+    }
+
+    .gs-svc-body {
+        display: flex;
+        flex-direction: column;
+        padding: 26px 30px;
+    }
+
+    // --------------------------------------------------------- section header
+    .gs-svc-sect {
+        display: flex;
+        align-items: center;
+        flex: 0 0 100%;
+        max-width: 100%;
+        gap: 10px;
+        margin: 8px 0 18px;
+
+        &::before {
+            content: '';
+            display: flex;
+            flex: none;
+            width: 16px;
+            height: 16px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 16px 16px;
+        }
+
+        &::after {
+            content: '';
+            display: flex;
+            flex: 1;
+            height: 1px;
+            background: #e9eff5;
+        }
+
+        // font-size and text-transform are !important because the Absence page
+        // reuses its existing "Additional Information" heading, which carries
+        // Atlas text-large / text-capitalize design properties — and Atlas
+        // declares those !important, so specificity alone cannot win.
+        .gs-svc-sect-title,
+        .mx-text {
+            font-size: 12px !important;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase !important;
+            color: #8094ac;
+            margin: 0;
+        }
+
+        // A header whose fields are all hidden — by entity access or a
+        // visibility condition — would otherwise sit above nothing.
+        &:has(+ .gs-svc-sect),
+        &:last-child {
+            display: none;
+        }
+
+        &.gs-svc-sect-user::before {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231478b0' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4.8 21a7.4 7.4 0 0 1 14.4 0'/%3E%3C/svg%3E");
+        }
+
+        &.gs-svc-sect-idcard::before {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231478b0' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='5' width='19' height='14' rx='2.5'/%3E%3Ccircle cx='8.5' cy='11' r='2.1'/%3E%3Cpath d='M5.2 16.2a3.6 3.6 0 0 1 6.6 0'/%3E%3Cpath d='M14.5 10h4.2M14.5 13.6h4.2'/%3E%3C/svg%3E");
+        }
+
+        &.gs-svc-sect-pin::before {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231478b0' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19.5 10.3c0 5.4-7.5 11.2-7.5 11.2S4.5 15.7 4.5 10.3a7.5 7.5 0 0 1 15 0z'/%3E%3Ccircle cx='12' cy='10.1' r='2.7'/%3E%3C/svg%3E");
+        }
+
+        &.gs-svc-sect-note::before {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231478b0' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2.5V8h5.5'/%3E%3Cpath d='M8.5 13h7M8.5 16.6h4.5'/%3E%3C/svg%3E");
+        }
+
+        &.gs-svc-sect-calendar::before {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231478b0' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='17' rx='2.4'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3 9.8h18'/%3E%3Cpath d='M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2'/%3E%3C/svg%3E");
+        }
+
+        &.gs-svc-sect-food::before {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231478b0' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 3v6.2A2.8 2.8 0 0 0 6.8 12H7v9'/%3E%3Cpath d='M7 3v6'/%3E%3Cpath d='M10 3v6.2A2.8 2.8 0 0 1 7.2 12'/%3E%3Cpath d='M17.5 3c-1.6 1.1-2.4 3-2.4 5.4 0 2 .8 3.2 2.4 3.6V21'/%3E%3C/svg%3E");
+        }
+
+        &.gs-svc-sect-info::before {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231478b0' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.3'/%3E%3Cpath d='M12 7.8h.01'/%3E%3C/svg%3E");
+        }
+    }
+
+    // ------------------------------------------------------------ field flow
+    .gs-svc-fields {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        column-gap: 24px;
+
+        // calc() rather than nth-child parity: the section headers are siblings
+        // in this same wrap container, so odd/even would flip after each one.
+        .items-row {
+            display: flex;
+            flex-direction: column;
+            flex: 0 0 calc(50% - 12px);
+            max-width: calc(50% - 12px);
+            min-width: 0;
+        }
+
+        .gs-svc-field-wide {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+
+    // ------------------------------------------------------- labels + inputs
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        min-width: 0;
+        margin-bottom: 18px;
+
+        >.control-label,
+        >label {
+            width: auto;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #1b3a6b;
+            text-align: left;
+        }
+    }
+
+    // The reference marks required fields with a red asterisk. Nothing in the
+    // existing theme draws one (the pseudo-element resolves to content: none),
+    // so it is created here rather than merely recoloured.
+    .required-form-group {
+        .control-label::after {
+            content: '*';
+            margin-left: 3px;
+            color: #d4453f;
+            font-weight: 700;
+        }
+    }
+
+    .form-control,
+    input[type='text'],
+    input[type='email'],
+    input[type='number'],
+    input[type='tel'],
+    select,
+    textarea {
+        // The control is a flex item of the column .form-group above, so
+        // without flex:none it shrinks below its height (seen collapsing to
+        // 19px on the Absence page's emergency contact field).
+        flex: none;
+        width: 100%;
+        height: 46px;
+        padding: 0 14px;
+        border: 1px solid #dce5ee;
+        border-radius: 8px;
+        background-color: #ffffff;
+        color: #123a63;
+        font-size: 14.5px;
+        box-shadow: none;
+        transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+
+        &::placeholder {
+            color: #a7b6c7;
+        }
+
+        &:hover:not(:disabled) {
+            border-color: #bfcedd;
+        }
+
+        &:focus {
+            outline: none;
+            border-color: #1a93c4;
+            box-shadow: 0 0 0 3px rgba(34, 167, 208, 0.26);
+        }
+
+        &:disabled,
+        &[readonly] {
+            background-color: #edf2f7;
+            color: #5a6b80;
+            cursor: default;
+        }
+    }
+
+    textarea,
+    textarea.form-control {
+        height: auto;
+        min-height: 108px;
+        padding: 12px 14px;
+        line-height: 1.55;
+        resize: vertical;
+    }
+
+    select,
+    select.form-control {
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right: 40px;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%235a6b80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        cursor: pointer;
+    }
+
+    // Combobox internals sit on the text baseline, leaving the selected value
+    // high in the 46px control; centring the whole chain fixes it.
+    .widget-combobox {
+        .widget-combobox-input-container {
+            display: flex;
+            align-items: center;
+            height: 46px;
+            padding: 0 14px;
+        }
+
+        .widget-combobox-selected-items,
+        .widget-combobox-text {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
+            height: auto;
+            padding: 0;
+        }
+
+        input[type='text'],
+        .widget-combobox-input {
+            flex: 1;
+            min-width: 0;
+            height: auto;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .widget-combobox-down-arrow {
+            display: flex;
+            align-items: center;
+            flex: none;
+            height: auto;
+        }
+    }
+
+    // ------------------------------------------------- pluggable widget inputs
+    // These render their own markup and never get .form-control, so they have
+    // to be matched on their library classes to sit on the same 46px control
+    // baseline as everything else.
+
+    // AntdDateRangePicker — Absence "Start to End Date".
+    .ant-picker {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 46px;
+        padding: 0 14px;
+        border: 1px solid #dce5ee;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+
+        input {
+            height: auto;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            color: #123a63;
+            font-size: 14.5px;
+
+            &::placeholder {
+                color: #a7b6c7;
+            }
+        }
+
+        .ant-picker-range-separator {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: #8094ac;
+        }
+
+        // antd's suffix renders its own icon font/svg, which a legacy theme
+        // override half-replaces into a broken glyph; drawn cleanly instead.
+        .ant-picker-suffix {
+            display: flex;
+            flex: none;
+            width: 18px;
+            height: 18px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 18px 18px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238094ac' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='17' rx='2.4'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3 9.8h18'/%3E%3Cpath d='M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2'/%3E%3C/svg%3E");
+
+            >* {
+                display: none;
+            }
+        }
+
+        .ant-picker-clear {
+            background: #ffffff;
+            color: #8094ac;
+
+            &:hover {
+                color: #b42318;
+            }
+        }
+
+        .ant-picker-active-bar {
+            background: #1a93c4;
+        }
+
+        &:hover {
+            border-color: #bfcedd;
+        }
+
+        &.ant-picker-focused {
+            border-color: #1a93c4;
+            box-shadow: 0 0 0 3px rgba(34, 167, 208, 0.26);
+        }
+    }
+
+    // ReactDateTimePicker (react-datetime) — the date and time fields. The
+    // widget renders .rdt (input) plus a separate trigger button as siblings
+    // inside .mx-compound-control. To match the antd range picker's look, the
+    // wrapper is drawn as the single bordered field, the input goes borderless
+    // inside it, and the trigger becomes a quiet calendar at the right edge.
+    .reactDateTimePicker.mx-compound-control {
+        display: flex;
+        align-items: center;
+        height: 46px;
+        border: 1px solid #dce5ee;
+        border-radius: 8px;
+        background: #ffffff;
+        transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+
+        &:hover {
+            border-color: #bfcedd;
+        }
+
+        &:focus-within {
+            border-color: #1a93c4;
+            box-shadow: 0 0 0 3px rgba(34, 167, 208, 0.26);
+        }
+
+        // read-only dates (e.g. Join Date) grey the whole field, not the input
+        &:has(input:disabled),
+        &:has(input[readonly]) {
+            background: #edf2f7;
+        }
+
+        .rdt {
+            flex: 1;
+            min-width: 0;
+
+            input,
+            input.form-control {
+                height: 44px;
+                border: none;
+                background: transparent;
+                box-shadow: none;
+
+                &:focus,
+                &:disabled,
+                &[readonly] {
+                    border: none;
+                    background: transparent;
+                    box-shadow: none;
+                }
+            }
+        }
+
+        // The widget's own trigger: the Glyphicons font is not loaded (colour
+        // emoji fallback), and a legacy rule paints calendarweb.svg with
+        // !important — hence the !important on the replacement image.
+        >.btn,
+        >.mx-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            width: 40px;
+            height: 44px;
+            margin: 0 !important;
+            padding: 0;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            background-color: transparent;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 18px 18px !important;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238094ac' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='17' rx='2.4'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3 9.8h18'/%3E%3Cpath d='M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2'/%3E%3C/svg%3E") !important;
+            color: #8094ac;
+
+            .glyphicon {
+                display: none;
+            }
+
+            &:hover:not(.disabled) {
+                background-color: transparent;
+            }
+        }
+    }
+
+    // Invalid state sits on the wrapper for these fields, not the inner input.
+    .has-error .reactDateTimePicker.mx-compound-control {
+        border-color: #e0716b;
+        box-shadow: 0 0 0 3px rgba(224, 113, 107, 0.18);
+
+        input {
+            border: none;
+            box-shadow: none;
+        }
+    }
+
+    .rdt {
+        display: flex;
+        width: 100%;
+
+        input {
+            width: 100%;
+        }
+    }
+
+    // ---------------------------------------- comments / attachments snippet
+    // Shared snippet, so it is reached only through this page scope. Rendered
+    // as a repeater section head: uppercase title on the left, Add on the right.
+    // Comments and Attachments share one wrapper, so the second heading
+    // (Attachments) follows the comments list directly with no separation. A
+    // divider and top spacing set the two groups apart, as the reference does.
+    .mx-listview+.comment-attachment-heading {
+        margin-top: 26px;
+        padding-top: 26px;
+        border-top: 1px solid #e9eff5;
+    }
+
+    .comment-attachment-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+
+        h4,
+        .mx-text {
+            margin: 0;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8094ac;
+        }
+
+        .add-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 38px;
+            margin: 0 0 0 auto !important;
+            padding: 0 15px;
+            border: 1px solid #a8dcea;
+            border-radius: 9px;
+            background: #ecf8fb;
+            color: #0e6f8c;
+            font-size: 13.5px;
+            font-weight: 700;
+
+            &:hover {
+                background: #ddf1f7;
+                color: #0e6f8c;
+            }
+        }
+    }
+
+    // Comments / attachments wrappers, spaced like the reference's .sect
+    // blocks: 26px vertical rhythm with a hairline divider between them, and
+    // no inherited side margins so the rows align with the heading edge.
+    .gray-rounded-container {
+        margin: 0 !important;
+        padding: 26px 0;
+        border-top: 1px solid #e9eff5;
+    }
+
+    // Repeater lists: comment rows and attachment rows added by the Add buttons.
+    // Atlas styles the list items themselves (.mx-listview > ul > li, and a
+    // :last-child rule that draws a rule under the list), so these selectors
+    // carry the matching element+child specificity to override them.
+    .comments-list,
+    .sm-attachment-list {
+        // a utility margin on the wrapper left the lists ending short of the
+        // heading row's Add button; the section owns its edges instead
+        width: 100%;
+        margin: 0 !important;
+
+        >ul {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+
+            >li {
+                padding: 0;
+                border: none;
+                background: transparent;
+                list-style: none;
+
+                &:last-child {
+                    border-bottom: none;
+                }
+            }
+        }
+    }
+
+    .sm-form-comment,
+    .add-attachments-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 15px;
+        border: 1px solid #dce5ee;
+        border-radius: 12px;
+        background: #f7fafc;
+
+        .comment-input,
+        .attachment-type-file {
+            flex: 1;
+            min-width: 0;
+            margin: 0 !important;
+        }
+    }
+
+    // Uploaded attachment row: the real markup is
+    //   .add-attachments-row > .d-flex-attach > [.container (file link)] + trash
+    // which stacked vertically. Laid out as the reference file-row: a paperclip
+    // tile, the filename, and the delete button pushed to the right.
+    .d-flex-attach {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        width: 100%;
+
+        &::before {
+            content: '';
+            display: flex;
+            flex: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background-color: #e7f5f9;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 18px 18px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e6f8c' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 11.3 11.9 20a5.2 5.2 0 0 1-7.4-7.4l8.8-8.8a3.5 3.5 0 0 1 4.9 4.9l-8.7 8.7a1.7 1.7 0 0 1-2.5-2.4l8.1-8.1'/%3E%3C/svg%3E");
+        }
+
+        >*:not(.comment-delete_btn) {
+            flex: 1;
+            min-width: 0;
+            margin: 0 !important;
+        }
+
+        .comment-delete_btn {
+            margin-left: auto !important;
+        }
+    }
+
+    // The same row, built the other way. Digital Card lays an attachment out as
+    // a flex box (.d-flex-attach); Drivers, Catering and Absence share a snippet
+    // that uses a layout grid of three auto-fill columns instead — so the name,
+    // the type and the delete button each took a third of the row, and the
+    // paperclip tile that hangs off .d-flex-attach never appeared at all.
+    // Flattened here into the same shape, so all four read alike.
+    .add-attachments-row:has(> .mx-layoutgrid) {
+        &::before {
+            content: '';
+            display: flex;
+            flex: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background-color: #e7f5f9;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 18px 18px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e6f8c' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 11.3 11.9 20a5.2 5.2 0 0 1-7.4-7.4l8.8-8.8a3.5 3.5 0 0 1 4.9 4.9l-8.7 8.7a1.7 1.7 0 0 1-2.5-2.4l8.1-8.1'/%3E%3C/svg%3E");
+        }
+
+        > .mx-layoutgrid {
+            flex: 1;
+            min-width: 0;
+            padding: 0;
+
+            > .row {
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
+                gap: 13px;
+                margin: 0;
+
+                // the grid's columns are AutoFill, which is what split the row
+                // into thirds; they size to their content instead
+                > * {
+                    flex: 0 0 auto;
+                    width: auto;
+                    min-width: 0;
+                    padding: 0;
+                }
+
+                // the file name takes the room, the delete button sits at the end
+                > :first-child {
+                    flex: 1 1 auto;
+                }
+
+                > :last-child {
+                    margin-left: auto;
+                }
+            }
+        }
+
+        // the attachment type reads as the reference's file meta, not as a
+        // second file name
+        .attachment-type-file {
+            flex: none;
+            font-size: 12px;
+            font-weight: 500;
+            color: #8094ac;
+            white-space: nowrap;
+        }
+    }
+
+    .attachment-type-file,
+    .d-flex-attach a,
+    .d-flex-attach .mx-link {
+        color: #123a63;
+        font-size: 14px;
+        font-weight: 700;
+        word-break: break-all;
+        text-decoration: none;
+    }
+
+    // Delete: a proper icon-only button. The Atlas trash glyph rendered tiny,
+    // so it is hidden and a larger trash icon drawn as the button background;
+    // the button itself gets the reference's red-tinted delete treatment.
+    .comment-delete_btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        align-self: center;
+        width: 40px;
+        height: 40px;
+        margin: 0 !important;
+        padding: 0;
+        border: 1px solid #f0b2ae;
+        border-radius: 10px;
+        background-color: #fef3f2;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 18px 18px;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b42318' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 6h17'/%3E%3Cpath d='M8.5 6V4.4A1.4 1.4 0 0 1 9.9 3h4.2a1.4 1.4 0 0 1 1.4 1.4V6'/%3E%3Cpath d='M18.5 6v13.1a1.9 1.9 0 0 1-1.9 1.9H7.4a1.9 1.9 0 0 1-1.9-1.9V6'/%3E%3Cpath d='M10 10.5v6M14 10.5v6'/%3E%3C/svg%3E");
+        font-size: 0;
+
+        .glyphicon,
+        .mx-icon,
+        [class*='glyphicon'],
+        [class*='mx-icon'] {
+            display: none !important;
+        }
+
+        &:hover {
+            border-color: #e0716b;
+            background-color: #fde5e3;
+        }
+    }
+
+    // Invalid control, matching the reference's .control.is-bad.
+    .has-error {
+
+        .form-control,
+        input,
+        select,
+        textarea,
+        .widget-combobox-input-container {
+            border-color: #e0716b;
+            box-shadow: 0 0 0 3px rgba(224, 113, 107, 0.18);
+        }
+
+        .control-label {
+            color: #1b3a6b;
+        }
+    }
+
+    // Combobox drop-down and the react-datetime calendar. Both render inside the
+    // page, so they are reachable from this scope.
+    .widget-combobox-menu,
+    .rdtPicker {
+        border: 1px solid #dce5ee;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(15, 39, 67, 0.08), 0 16px 40px rgba(15, 39, 67, 0.07);
+        overflow: hidden;
+    }
+
+    .widget-combobox-menu-item {
+        padding: 10px 14px;
+        color: #3f5069;
+        font-size: 14px;
+
+        &:hover,
+        &.widget-combobox-menu-item-highlighted {
+            background: #e7f5f9;
+            color: #14639f;
+        }
+
+        &.widget-combobox-menu-item-selected {
+            background: #ecf8fb;
+            color: #14639f;
+            font-weight: 700;
+        }
+    }
+
+    .rdtPicker {
+        padding: 10px;
+
+        td.rdtActive,
+        td.rdtActive:hover {
+            background: #1478b0;
+            color: #ffffff;
+        }
+
+        td.rdtDay:hover,
+        td.rdtHour:hover,
+        td.rdtMinute:hover {
+            background: #e7f5f9;
+        }
+
+        th {
+            color: #8094ac;
+            font-weight: 700;
+        }
+
+        // Time picker (counters): one connected time card under the clock. Each
+        // field is a column you step through — a big tabular value with a
+        // chevron above and below — and the value rolls in the direction it was
+        // stepped (gs-svc-clock.js tags the change; the keyframes are at the
+        // foot of this file).
+        .rdtCounters {
+            display: inline-flex;
+            align-items: stretch;
+            justify-content: center;
+            gap: 0;
+            margin: 0 auto;
+            padding: 5px;
+            border: 1px solid #dce5ee;
+            border-radius: 16px;
+            background-image: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+            box-shadow:
+                inset 0 1px 2px rgba(15, 39, 67, 0.05),
+                0 4px 12px rgba(15, 39, 67, 0.05);
+        }
+
+        .rdtCounter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 54px;
+            height: auto;
+
+            .rdtCount {
+                width: 46px;
+                height: 44px;
+                line-height: 44px;
+                border-radius: 12px;
+                background: transparent;
+                color: #123a63;
+                font-size: 21px;
+                font-weight: 800;
+                letter-spacing: -0.01em;
+                font-variant-numeric: tabular-nums;
+                transition: background-color 0.16s ease;
+            }
+
+            &:hover .rdtCount {
+                background: #eef6fb;
+            }
+
+            // the widget writes its own triangles into these buttons; the glyph
+            // is collapsed and a chevron drawn in its place
+            .rdtBtn {
+                width: 34px;
+                height: 22px;
+                line-height: 22px;
+                font-size: 0;
+                border-radius: 8px;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 13px 13px;
+                background-color: transparent;
+                transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+                opacity: 0.75;
+
+                &:hover {
+                    background-color: #e7f5f9;
+                    opacity: 1;
+                }
+
+                &:first-child {
+                    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238094ac' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 15 6-6 6 6'/%3E%3C/svg%3E");
+
+                    &:hover {
+                        transform: translateY(-1px);
+                    }
+                }
+
+                &:last-child {
+                    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238094ac' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+                    &:hover {
+                        transform: translateY(1px);
+                    }
+                }
+            }
+
+            // AM / PM is a choice, not a number — it reads as a small pill
+            &.rdtCounterDayPart .rdtCount {
+                font-size: 15px;
+                font-weight: 800;
+                letter-spacing: 0.04em;
+                color: #14639f;
+                background: #e7f5f9;
+                border: 1px solid rgba(20, 99, 159, 0.16);
+                border-radius: 999px;
+                width: 50px;
+                height: 32px;
+                line-height: 30px;
+                margin: 6px 0;
+            }
+        }
+
+        // ------------------------------------------------- analog clock face
+        // gs-svc-clock.js puts this above the counters and keeps its hands on
+        // whatever they read. It is a reading of the value, not a control —
+        // the spinner below is still how the time is set.
+        .gs-clock {
+            display: flex;
+            justify-content: center;
+            padding: 8px 0 14px;
+        }
+
+        .gs-clock-face {
+            position: relative;
+            width: 118px;
+            height: 118px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='none' stroke='%23e3ecf4' stroke-width='1'/%3E%3Cg stroke='%2314639f' stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='50' y1='7' x2='50' y2='14'/%3E%3Cline x1='50' y1='7' x2='50' y2='14' transform='rotate(90 50 50)'/%3E%3Cline x1='50' y1='7' x2='50' y2='14' transform='rotate(180 50 50)'/%3E%3Cline x1='50' y1='7' x2='50' y2='14' transform='rotate(270 50 50)'/%3E%3C/g%3E%3Cg stroke='%23a7b6c7' stroke-width='1.5' stroke-linecap='round'%3E%3Cline x1='50' y1='8' x2='50' y2='12' transform='rotate(30 50 50)'/%3E%3Cline x1='50' y1='8' x2='50' y2='12' transform='rotate(60 50 50)'/%3E%3Cline x1='50' y1='8' x2='50' y2='12' transform='rotate(120 50 50)'/%3E%3Cline x1='50' y1='8' x2='50' y2='12' transform='rotate(150 50 50)'/%3E%3Cline x1='50' y1='8' x2='50' y2='12' transform='rotate(210 50 50)'/%3E%3Cline x1='50' y1='8' x2='50' y2='12' transform='rotate(240 50 50)'/%3E%3Cline x1='50' y1='8' x2='50' y2='12' transform='rotate(300 50 50)'/%3E%3Cline x1='50' y1='8' x2='50' y2='12' transform='rotate(330 50 50)'/%3E%3C/g%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 118px 118px;
+            border: 1px solid #dce5ee;
+            box-shadow:
+                inset 0 1px 3px rgba(15, 39, 67, 0.06),
+                0 6px 16px rgba(15, 39, 67, 0.07);
+        }
+
+        .gs-clock-hand {
+            position: absolute;
+            left: 50%;
+            bottom: 50%;
+            display: block;
+            border-radius: 2px;
+            transform-origin: 50% 100%;
+            // `rotate` rather than a transform, so the two hands animate on
+            // their own and neither has to restate the other
+            transition: rotate 0.35s cubic-bezier(0.2, 0.8, 0.25, 1);
+        }
+
+        .gs-clock-hour {
+            width: 4px;
+            margin-left: -2px;
+            height: 30px;
+            background: #123a63;
+            rotate: var(--gs-clock-h, 0deg);
+        }
+
+        .gs-clock-minute {
+            width: 2.5px;
+            margin-left: -1.25px;
+            height: 43px;
+            background: #1478b0;
+            rotate: var(--gs-clock-m, 0deg);
+        }
+
+        .gs-clock-pin {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 9px;
+            height: 9px;
+            margin: -4.5px 0 0 -4.5px;
+            border-radius: 50%;
+            background: #1478b0;
+            box-shadow: 0 0 0 2.5px #ffffff;
+        }
+
+        // the hands settle rather than sweep when motion is turned down
+        @media (prefers-reduced-motion: reduce) {
+            .gs-clock-hand {
+                transition: none;
+            }
+        }
+
+        // the colon, with the hairline that divides the card into fields
+        .rdtCounterSeparator {
+            display: flex;
+            align-items: center;
+            width: 14px;
+            padding: 0;
+            line-height: 1;
+            color: #a7b6c7;
+            font-size: 19px;
+            font-weight: 800;
+        }
+    }
+
+    // Mendix renders validation as a Bootstrap alert box; the reference shows a
+    // plain red hint under the field instead.
+    .alert.mx-validation-message {
+        margin: 6px 0 0;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        color: #b42318;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    // "No items found" — the reference's dashed empty state. Selector mirrors
+    // Atlas's own `.mx-listview > ul .mx-listview-empty` so it outranks it.
+    .mx-listview>ul>li.mx-listview-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 30px;
+        border: 1px dashed #dce5ee;
+        border-radius: 12px;
+        background: #f7fafc;
+        text-align: center;
+
+        &::before {
+            content: '';
+            display: flex;
+            flex: none;
+            width: 26px;
+            height: 26px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 26px 26px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a7b6c7' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2.5V8h5.5'/%3E%3Cpath d='M8.5 13h7M8.5 16.6h4.5'/%3E%3C/svg%3E");
+        }
+
+        label,
+        .mx-text {
+            margin: 0;
+            color: #8094ac;
+            font-size: 13.5px;
+            font-weight: 400;
+        }
+    }
+
+    // The reference names what is missing and what to do about it, per list
+    // (assets/app.js), rather than Mendix's one "No items found". That string
+    // is the client's own system text, shared by every list view in the app, so
+    // it cannot be reworded for these four pages in the model — the label is
+    // collapsed to zero and the sentence set on it here instead. \2014 is the
+    // em dash, written as an escape so the file's encoding cannot alter it —
+    // the doubled space after it is deliberate: CSS eats one as the escape's
+    // terminator.
+    .comments-list>ul>li.mx-listview-empty,
+    .sm-attachment-list>ul>li.mx-listview-empty {
+        label {
+            font-size: 0;
+
+            &::after {
+                font-size: 13.5px;
+            }
+        }
+    }
+
+    .comments-list>ul>li.mx-listview-empty label::after {
+        content: 'No comments yet \2014  add one to give your approver context.';
+    }
+
+    .sm-attachment-list>ul>li.mx-listview-empty label::after {
+        content: 'No attachments yet \2014  add supporting documents if you have any.';
+    }
+
+    // Plain phone textbox (mob-web) — a legacy rule paints a navy receiver
+    // glyph stretched across the input's edge. Redrawn as a grey 16px icon at
+    // the RIGHT edge, the same side every other field icon sits on (calendars,
+    // chevrons), so all inputs read consistently.
+    .mob-web .form-control {
+        padding-right: 44px;
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        background-size: 16px 16px;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238094ac' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.2 3.8h3.4l1.7 4.2-2.1 1.4a11.6 11.6 0 0 0 5.4 5.4l1.4-2.1 4.2 1.7v3.4a1.6 1.6 0 0 1-1.7 1.6A16.6 16.6 0 0 1 3.6 5.5a1.6 1.6 0 0 1 1.6-1.7z'/%3E%3C/svg%3E");
+    }
+
+    // EduconnexPhone (react-phone-input-2) — mobile / telephone on Digital
+    // Card. The widget also carries common-form_group / arabic-input-field, so
+    // legacy theme rules (85% widths, pill radii, declared !important) reach it;
+    // the whole control is pinned to the field baseline. The flag sits in a
+    // fixed 46px box at the left, and the input is padded to clear it, so the
+    // flag stays put and the field runs full width like the others.
+    // The widget renders its input inside a Bootstrap .col-sm-9 (75% wide),
+    // which caps the field at ~560px. Every grid column in the widget wrapper
+    // is forced to full width so the phone field fills its form column like the
+    // rest.
+    .educ-phone-input,
+    .educ-phone-input .row,
+    .educ-phone-input [class*='col-'] {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .react-tel-input {
+        position: relative;
+        width: 100% !important;
+
+        .form-control {
+            width: 100% !important;
+            height: 46px !important;
+            padding-left: 58px !important;
+            border: 1px solid #dce5ee !important;
+            border-radius: 8px !important;
+            background: #ffffff !important;
+            color: #123a63;
+            font-size: 14.5px;
+
+            &:focus {
+                border-color: #1a93c4 !important;
+                box-shadow: 0 0 0 3px rgba(34, 167, 208, 0.26);
+            }
+        }
+
+        // Fixed flag box pinned to the left edge, inside the field border.
+        .flag-dropdown {
+            display: block !important;
+            position: absolute !important;
+            top: 1px;
+            bottom: 1px;
+            left: 1px;
+            width: 46px;
+            border: none !important;
+            border-right: 1px solid #dce5ee !important;
+            border-radius: 8px 0 0 8px !important;
+            background: transparent !important;
+
+            &.open,
+            &:hover {
+                background: #edf2f7 !important;
+            }
+        }
+
+        .selected-flag {
+            width: 100% !important;
+            height: 100% !important;
+            padding: 0 0 0 12px !important;
+            border-radius: 8px 0 0 8px !important;
+            background: transparent !important;
+
+            &:hover,
+            &:focus,
+            &.open {
+                background: #edf2f7 !important;
+            }
+        }
+
+        // The country dropdown list opened from the flag.
+        .country-list {
+            margin-top: 6px;
+            padding: 6px;
+            border: 1px solid #dce5ee;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(15, 39, 67, 0.08), 0 16px 40px rgba(15, 39, 67, 0.07);
+
+            // search row, pinned to the top of the scrolling list
+            .search {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                display: flex;
+                align-items: center;
+                padding: 4px 4px 8px;
+                background: #ffffff;
+            }
+
+            // the widget's magnifier emoji reads as a stray glyph; hidden in
+            // favour of a clean full-width search box
+            .search-emoji {
+                display: none !important;
+            }
+
+            .search-box {
+                width: 100%;
+                height: 38px;
+                margin: 0 !important;
+                padding: 0 12px !important;
+                border: 1px solid #dce5ee !important;
+                border-radius: 8px !important;
+                background: #ffffff;
+                color: #123a63;
+                font-size: 14px;
+
+                &::placeholder {
+                    color: #a7b6c7;
+                }
+
+                &:focus {
+                    outline: none;
+                    border-color: #1a93c4 !important;
+                    box-shadow: 0 0 0 3px rgba(34, 167, 208, 0.26);
+                }
+            }
+
+            .country {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 9px 10px;
+                border-radius: 8px;
+                color: #3f5069;
+                font-size: 14px;
+
+                .dial-code {
+                    color: #8094ac;
+                }
+
+                &.highlight,
+                &:hover {
+                    background: #e7f5f9;
+
+                    .country-name,
+                    .dial-code {
+                        color: #14639f;
+                    }
+                }
+            }
+
+            .divider {
+                border-bottom: 1px solid #e9eff5;
+            }
+        }
+    }
+
+    .mx-validation-message,
+    .val-x {
+        font-size: 12px;
+        font-weight: 600;
+        color: #b42318;
+    }
+
+    // ------------------------------------------------------------ radio groups
+    // Every radio on these pages is the one control the whole app now shares
+    // (see the application-wide block at the foot of this file). Nothing is
+    // restyled here — only laid out: the options sit in a row that wraps, with
+    // the track, the pills and the hidden native input of the old segmented
+    // treatment all gone, so a radio reads the same here as anywhere else.
+    .form-radio-btn,
+    .mx-radiobuttons,
+    .mx-radiogroup {
+        .mx-radiobuttons-input,
+        &.mx-radiogroup,
+        &.mx-radiobuttons:has(> .radio) {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            align-self: flex-start;
+            width: auto;
+            max-width: 100%;
+            gap: 10px 24px;
+            padding: 0;
+            border-radius: 0;
+            background: none;
+        }
+
+        .radio {
+            display: flex;
+            align-items: center;
+            margin: 0;
+        }
+    }
+
+
+
+    // ------------------------------------------------- absence balance rows
+    // The four figures under the donut are two legends, not one: the first pair
+    // is drawn by the chart's HTML snippet, the second by a data view below it.
+    // Each row carried 5px of its own margin, the snippet 10px of padding and
+    // the chart's container another 8px, so the rows sat 12px apart inside a
+    // pair and 28px apart between them. The spacing is now the 2px the
+    // reference gives .stat-rows, the same everywhere down the list.
+    .absence-1-c,
+    .absence-2-c {
+        .legend-item {
+            margin: 0 !important;
+        }
+
+        .widget-custom-html-snippet {
+            padding-bottom: 0;
+
+            // the donut needs room to breathe before the figures start; only
+            // this first legend is inside the snippet, so the 2px rhythm
+            // between the rows themselves is untouched
+            .legend-container {
+                margin-top: 68px;
+            }
+        }
+
+        > .mx-dataview-content > .ct-p {
+            margin-bottom: 2px !important;
+        }
+    }
+
+    // ---------------------------------------------------- date range arrow
+    // Ant Design separates the two dates with its "swap-right" glyph: a long
+    // thin arrow at 14px that reads as a stray mark between the fields. Drawn
+    // here as a compact arrow at the same weight as every other icon on these
+    // pages, with even air either side.
+    .ant-picker-range-separator {
+        display: flex;
+        align-items: center;
+        padding: 0 13px;
+
+        .ant-picker-separator {
+            display: inline-flex;
+            width: 18px;
+            height: 18px;
+            font-size: 0;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a7b6c7' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12h15'/%3E%3Cpath d='m13.5 6.5 6 5.5-6 5.5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 18px 18px;
+            transition: opacity 0.15s ease;
+        }
+
+        .anticon,
+        svg {
+            display: none !important;
+        }
+    }
+
+    // it firms up while the range is being picked
+    .ant-picker-focused .ant-picker-range-separator .ant-picker-separator {
+        opacity: 0.75;
+    }
+
+
+    // ------------------------------------------------- absence history dialog
+    // History is asked for rather than stacked under the balance: the icon on
+    // the balance card opens it over the blurred page, which leaves the rail to
+    // the balance alone and the donut its full size. gs-svc-clock.js moves the
+    // card into the dialog and puts it back on close, so the list is never
+    // rebuilt.
+    .absence-1-c > .mx-dataview-content {
+        position: relative;
+    }
+
+    .gs-hist-btn {
+        position: absolute;
+        top: -2px;
+        right: 0;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border: 1px solid #dce5ee;
+        border-radius: 10px;
+        background-color: #ffffff;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314639f' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.2 12a8.8 8.8 0 1 0 2.6-6.2'/%3E%3Cpath d='M3 4.2V9h4.8'/%3E%3Cpath d='M12 7.6V12l3.1 1.9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 18px 18px;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+        &:hover {
+            background-color: #e7f5f9;
+            border-color: #a8dcea;
+        }
+
+        &:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(34, 167, 208, 0.26);
+        }
+    }
+
+    // at rest the card is not in the rail at all — it only exists in the dialog
+    .absence-2-c {
+        display: none;
+    }
+
+    // ---------------------------------------------------------- duration read
+    .org-anslabel {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+
+        >.mx-text:first-child {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1b3a6b;
+        }
+
+        >div:last-child {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 46px;
+            padding: 0 16px;
+            border: 1px solid rgba(14, 111, 140, 0.22);
+            border-radius: 8px;
+            background: #e7f5f9;
+            color: #0e6f8c;
+            font-size: 14.5px;
+            font-weight: 700;
+
+            &::before {
+                content: '';
+                display: flex;
+                flex: none;
+                width: 18px;
+                height: 18px;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 18px 18px;
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e6f8c' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5.2l3.2 1.9'/%3E%3C/svg%3E");
+            }
+
+            .mx-text {
+                color: #0e6f8c;
+                font-size: 14.5px;
+                font-weight: 700;
+            }
+        }
+    }
+
+    // ------------------------------------------------------------- action bar
+    .gs-svc-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 0;
+        padding: 18px 30px;
+        border-top: 1px solid #e9eff5;
+        background: #f7fafc;
+
+        // The buttons sit in unstyled wrapper containers. display:contents
+        // hoists them into this flex row, so gap and the Delete button's
+        // margin-left:auto measure against the full bar as in the reference.
+        >div {
+            display: contents;
+        }
+
+        // Atlas "Spacing" design properties on these buttons compile to
+        // .spacing-outer-*-* rules declared !important, so margin must be reset
+        // the same way — otherwise they beat the flex gap and the Delete
+        // button's auto margin, leaving the bar bunched up on the left.
+        .btn,
+        .mx-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            height: 44px;
+            margin: 0 !important;
+            padding: 0 20px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 700;
+            letter-spacing: 0.005em;
+            white-space: nowrap;
+            transition: transform 0.12s, filter 0.15s, background-color 0.15s, box-shadow 0.15s;
+
+            &::before {
+                content: '';
+                display: flex;
+                flex: none;
+                width: 16px;
+                height: 16px;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 16px 16px;
+            }
+
+            &:active {
+                transform: translateY(1px);
+            }
+        }
+
+        // Reference order is Submit, Save as Draft, Cancel … Delete. The pages
+        // declare them in varying orders (and Catering splits them across two
+        // containers), so flex order normalises all four pages.
+        .gs-svc-btn-submit {
+            order: 1;
+            border-color: transparent;
+            background-color: #1478b0;
+            background-image: linear-gradient(135deg, #22a7d0 0%, #14639f 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(20, 99, 159, 0.3);
+
+            &::before {
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m8.2 12.3 2.6 2.6 4.9-5.4'/%3E%3C/svg%3E");
+            }
+
+            &:hover {
+                filter: brightness(1.06);
+                color: #ffffff;
+            }
+        }
+
+        .gs-svc-btn-draft {
+            order: 2;
+            border-color: #efc978;
+            background: #fff6e5;
+            color: #8a5a06;
+
+            &::before {
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a5a06' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2.5V8h5.5'/%3E%3Cpath d='M8.5 13h7M8.5 16.6h4.5'/%3E%3C/svg%3E");
+            }
+
+            &:hover {
+                background: #fdedcf;
+                color: #8a5a06;
+            }
+        }
+
+        .gs-svc-btn-cancel {
+            order: 3;
+            border-color: #d3dde8;
+            background: #ffffff;
+            color: #46586e;
+
+            &::before {
+                display: none;
+            }
+
+            &:hover {
+                background: #f2f6fa;
+                color: #46586e;
+            }
+        }
+
+        .gs-svc-btn-delete {
+            order: 4;
+            margin-left: auto !important;
+            border-color: #f0b2ae;
+            background: #fef3f2;
+            color: #b42318;
+
+            &::before {
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b42318' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 6h17'/%3E%3Cpath d='M8.5 6V4.4A1.4 1.4 0 0 1 9.9 3h4.2a1.4 1.4 0 0 1 1.4 1.4V6'/%3E%3Cpath d='M18.5 6v13.1a1.9 1.9 0 0 1-1.9 1.9H7.4a1.9 1.9 0 0 1-1.9-1.9V6'/%3E%3Cpath d='M10 10.5v6M14 10.5v6'/%3E%3C/svg%3E");
+            }
+
+            &:hover {
+                background: #fde5e3;
+                color: #b42318;
+            }
+        }
+    }
+
+    // ------------------------------------------- absence balance side panel
+    // Rendered by the shared SNIP_AbsenceReqDetails snippet. Reached only
+    // through this page scope, so the snippet itself stays untouched.
+    .absence-1-c,
+    .absence-2-c {
+        padding: 24px;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(15, 39, 67, 0.05), 0 2px 8px rgba(15, 39, 67, 0.05);
+
+        h3 {
+            margin: 0 0 18px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #123a63;
+        }
+    }
+
+    .absence-2-c {
+        margin-top: 20px;
+    }
+
+    // The donut and the first two stat rows live inside the custom HTML
+    // snippet, which carries 10px of horizontal padding; the last two rows sit
+    // outside it. That left the two groups on different edges — the rows that
+    // appeared to break out of the box were in fact the correctly aligned ones.
+    // Zeroing that padding puts all four on the card's own edge.
+    .absence-1-c,
+    .absence-2-c {
+
+        .widget-custom-html-snippet,
+        .ct-p,
+        .chart-cr,
+        .mx-dataview,
+        .mx-dataview-content,
+        .legend-container {
+            padding-left: 0;
+            padding-right: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .legend-container {
+            margin: 0;
+            width: 100%;
+        }
+
+        // the donut keeps its own breathing room
+        .ct-p {
+            margin-bottom: 8px;
+        }
+    }
+
+    // Highcharts writes the slice colour as an SVG fill attribute, and a CSS
+    // declaration outranks a presentation attribute — so this recolours the
+    // ring to the brand blue without touching the chart's own snippet.
+    .highcharts-point.highcharts-color-0 {
+        fill: #1a93c4 !important;
+    }
+
+    // Balance stat rows. Each row is a bare label text node followed by a value
+    // <span>; the flex gap also supplies the missing space between them, which
+    // otherwise renders as "Actual Remaining39.00".
+    .legend-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border-radius: 9px;
+            color: #5a6b80;
+            font-size: 13.5px;
+
+            // the reference's colour swatch
+            &::before {
+                content: '';
+                display: flex;
+                flex: none;
+                width: 8px;
+                height: 8px;
+                border-radius: 2px;
+                background: #a7b6c7;
+            }
+
+            // The value is always the last span. Rows in the second container
+            // carry a separate label span before it, which must stay a plain
+            // label rather than picking up the value treatment.
+            >span:last-child {
+                margin-left: auto;
+                color: #123a63;
+                font-weight: 800;
+                font-variant-numeric: tabular-nums;
+            }
+
+            >span:not(:last-child) {
+                margin-left: 0;
+                color: #5a6b80;
+                font-weight: 400;
+            }
+
+            &:nth-child(odd) {
+                background: #f7fafc;
+            }
+        }
+
+        // Two containers, two rows each. They are told apart by row shape — the
+        // second container's rows hold two spans, the first's only one. Both
+        // contain .orange somewhere, so a colour-class test matches either.
+        &:not(:has(> .legend-item > span + span)) {
+            .legend-item:nth-child(1) {
+                &::before {
+                    background: #1a93c4;
+                }
+
+                >span:last-child {
+                    color: #123a63;
+                }
+            }
+
+            .legend-item:nth-child(2) {
+                &::before {
+                    background: #9a6206;
+                }
+
+                >span:last-child {
+                    color: #9a6206;
+                }
+            }
+        }
+
+        &:has(> .legend-item > span + span) {
+            .legend-item:nth-child(1) {
+                &::before {
+                    background: #157f4b;
+                }
+
+                >span:last-child {
+                    color: #157f4b;
+                }
+            }
+
+            .legend-item:nth-child(2) {
+                &::before {
+                    background: #b42318;
+                }
+
+                >span:last-child {
+                    color: #b42318;
+                }
+            }
+        }
+    }
+
+    // The reference page head is icon + title + subtitle + chip only. The image
+    // widget stays in the model; it is hidden here (Drivers and Catering render
+    // it as a broken-image placeholder).
+    .gs-svc-head .employee-circle {
+        display: none;
+    }
+
+    // Responsive rules for these pages live in gs-bahri/atom-gs-responsive.scss,
+    // section 8 — every band in one place, beside the dashboard's own.
+}
+
+// =============================================================================
+//  Attachment pop-up — Main.FileAttachmentsPage
+//
+//  Mendix appends pop-ups to <body>, so this renders OUTSIDE .gs-service-page
+//  and cannot be reached from the page scope above. It is scoped instead on the
+//  page's own `testing` class, which nothing else in the theme styles.
+//
+//  That page is shared: the same pop-up also opens from Legal & Board Secretary
+//  attachments and shipment tracking, so those pick up this styling too.
+// =============================================================================
+
+.mx-window.testing {
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 24px 70px rgba(15, 39, 67, 0.22);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 22px;
+        border-bottom: 1px solid #e9eff5;
+
+        &::before {
+            content: '';
+            display: flex;
+            flex: none;
+            order: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            background-color: #e7f5f9;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 20px 20px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e6f8c' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 11.3 11.9 20a5.2 5.2 0 0 1-7.4-7.4l8.8-8.8a3.5 3.5 0 0 1 4.9 4.9l-8.7 8.7a1.7 1.7 0 0 1-2.5-2.4l8.1-8.1'/%3E%3C/svg%3E");
+        }
+
+        h4 {
+            order: 1;
+            flex: 1;
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+            color: #123a63;
+
+            &::after {
+                content: 'PDF, image or document';
+                display: block;
+                margin-top: 1px;
+                font-size: 13px;
+                font-weight: 400;
+                color: #8094ac;
+            }
+        }
+
+        .close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            order: 2;
+            width: 38px;
+            height: 38px;
+            margin: 0;
+            border-radius: 9px;
+            opacity: 1;
+            color: #8094ac;
+            font-size: 20px;
+            text-shadow: none;
+
+            &:hover {
+                background: #edf2f7;
+                color: #1b3a6b;
+            }
+        }
+    }
+
+    .modal-body {
+        // padding: 22px;
+    }
+
+    // The page repeats its own title and close button inside the body; the
+    // reference modal has one of each, so the duplicates are hidden.
+    .cybersecurity-popup-inner>.pageheader,
+    .popuup-close_btn {
+        display: none;
+    }
+
+    // File row, styled as the reference dropzone. The FileManager widget renders
+    // a read-only input plus a Browse button, so the dashed frame goes on the
+    // compound control that wraps them rather than replacing the widget.
+    .mx-filemanager {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+
+        >.control-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1b3a6b;
+        }
+
+        .mx-compound-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px;
+            border: 2px dashed #dce5ee;
+            border-radius: 12px;
+            background: #f7fafc;
+
+            &:hover {
+                border-color: #1a93c4;
+                background: #e7f5f9;
+            }
+        }
+
+        .form-control {
+            flex: 1;
+            height: 46px;
+            padding: 0 14px;
+            border: 1px solid #dce5ee;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #123a63;
+            font-size: 14.5px;
+        }
+
+        .mx-fileinput-upload-button {
+            flex: none;
+            height: 46px;
+            margin: 0;
+            padding: 0 18px;
+            border: 1px solid #a8dcea;
+            border-radius: 9px;
+            background: #ecf8fb;
+            color: #0e6f8c;
+            font-size: 13.5px;
+            font-weight: 700;
+
+            &:hover {
+                background: #ddf1f7;
+                color: #0e6f8c;
+            }
+        }
+    }
+
+    .validation-error {
+        margin-top: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #b42318;
+    }
+
+    .justify-content-end {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            height: 44px;
+            margin: 0 !important;
+            padding: 0 20px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 700;
+        }
+
+        .send-btn {
+            order: 2;
+            border-color: transparent;
+            background-color: #1478b0;
+            background-image: linear-gradient(135deg, #22a7d0 0%, #14639f 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(20, 99, 159, 0.3);
+
+            &:hover {
+                filter: brightness(1.06);
+                color: #ffffff;
+            }
+        }
+
+        .cancel-btn {
+            order: 1;
+            border-color: #d3dde8;
+            background: #ffffff;
+            color: #46586e;
+
+            &:hover {
+                background: #f2f6fa;
+                color: #46586e;
+            }
+        }
+    }
+}
+
+// =============================================================================
+//  Request success pop-up — shown after Save as Draft / Submit on the service
+//  request flows. Like the attachment pop-up it mounts on <body>, so it is
+//  scoped on its own `request-popups` page class. The window header shows the
+//  raw page title and doubles the close button the body already carries, so the
+//  header is hidden and the body close styled as the modal's close.
+// =============================================================================
+
+.mx-window.request-popups {
+    // The page pins the pop-up to 600x201 via inline styles, which clips the
+    // styled content behind a scrollbar; !important is the only way past an
+    // inline height. The scroll container inside is flattened for the same
+    // reason. Width is capped too — 600px left large empty margins around the
+    // small success message.
+    height: auto !important;
+    width: auto !important;
+    max-width: 440px !important;
+
+    .modal-content,
+    .mx-window-body {
+        height: auto !important;
+    }
+
+    .mx-scrollcontainer,
+    .mx-scrollcontainer-center,
+    .mx-scrollcontainer-wrapper {
+        position: static !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 24px 70px rgba(15, 39, 67, 0.22);
+        overflow: hidden;
+    }
+
+    .modal-header {
+        display: none;
+    }
+
+    .modal-body {
+        // padding: 14px;
+    }
+
+    .popuup-close_btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        margin: 0 !important;
+        padding: 0;
+        border: 1px solid transparent;
+        border-radius: 9px;
+        background: transparent;
+        color: #8094ac;
+
+        &:hover {
+            background: #edf2f7;
+            color: #1b3a6b;
+        }
+    }
+
+    .request-pop-container {
+        padding: 4px 20px 0px;
+        text-align: center;
+    }
+
+    .savepopup-text {
+        display: block;
+        margin: 4px 0 0;
+        color: #123a63;
+        font-size: 17px !important;
+        font-weight: 800;
+
+        &::before {
+            content: '';
+            display: block;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            border-radius: 50%;
+            background-color: #e8f6ee;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 28px 28px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23157f4b' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m8.2 12.3 2.6 2.6 4.9-5.4'/%3E%3C/svg%3E");
+        }
+    }
+
+    .reference-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 16px;
+        padding: 7px 14px;
+        border: 1px solid rgba(14, 111, 140, 0.28);
+        border-radius: 999px;
+        background: #e7f5f9;
+
+        &,
+        .reference-text,
+        span {
+            color: #0e6f8c;
+            font-size: 13px;
+            font-weight: 700;
+        }
+    }
+}
+
+// The Absence page's date-range calendar. antd mounts its dropdown on <body>,
+// so like the pop-up above it cannot be reached from the page scope. Only the
+// frame and the selected-day colour are set, leaving antd's layout alone.
+.ant-picker-dropdown {
+    .ant-picker-panel-container {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(15, 39, 67, 0.08), 0 16px 40px rgba(15, 39, 67, 0.07);
+    }
+
+    // Compact the range calendar: the two month panels default to large day
+    // cells, making the dropdown oversized. Cells, header and gap are tightened.
+    .ant-picker-panel {
+        .ant-picker-header {
+            padding: 0 8px;
+
+            button {
+                min-width: 1.2em;
+                line-height: 34px;
+                font-size: 13px;
+            }
+        }
+
+        .ant-picker-content {
+            width: auto;
+
+            th,
+            td {
+                height: 26px;
+                font-size: 12.5px;
+            }
+
+            th {
+                width: 28px;
+            }
+        }
+
+        .ant-picker-cell {
+            padding: 1px 0;
+
+            .ant-picker-cell-inner {
+                min-width: 26px;
+                height: 26px;
+                line-height: 26px;
+                border-radius: 6px;
+                font-size: 12.5px;
+            }
+        }
+    }
+
+    .ant-picker-date-panel {
+        width: auto;
+    }
+
+    .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
+    .ant-picker-cell-in-view.ant-picker-cell-range-start .ant-picker-cell-inner,
+    .ant-picker-cell-in-view.ant-picker-cell-range-end .ant-picker-cell-inner {
+        background: #1478b0;
+    }
+
+    .ant-picker-cell-in-view.ant-picker-cell-in-range::before,
+    .ant-picker-cell-in-view.ant-picker-cell-range-hover::before {
+        background: #e7f5f9;
+    }
+
+    .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
+        border-color: #1a93c4;
+    }
+}
+
+// =============================================================================
+//  Confirmation dialog — Mendix's built-in mx.ui.confirmation (the "Are you
+//  sure…" delete prompt). It renders on <body>, so it cannot be page-scoped;
+//  this styles it to the design system app-wide for consistency.
+// =============================================================================
+
+// The page-based confirmation popups (submit / back / re-submit across every
+// module) use Atlas PopupLayout, so their root is .mx-window and their inner
+// content carries the same .mx-dialog-body / .mx-dialog-footer classes. The
+// :has() match picks out only those windows (not the attachment/success ones),
+// so all confirmation popups get one consistent style.
+.modal-dialog.mx-dialog,
+.modal-dialog.mx-window:has(.mx-dialog-footer) {
+
+    .mx-dialog-content,
+    .mx-window-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 24px 70px rgba(15, 39, 67, 0.22);
+        overflow: hidden;
+    }
+
+    .mx-dialog-header,
+    .mx-window-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 22px;
+        border-bottom: 1px solid #e9eff5;
+
+        .mx-dialog-caption,
+        h4,
+        .caption {
+            order: 1;
+            flex: 1;
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+            color: #123a63;
+        }
+
+        .mx-dialog-close,
+        .close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            order: 2;
+            width: 34px;
+            height: 34px;
+            margin: 0;
+            border-radius: 9px;
+            opacity: 1;
+            color: #8094ac;
+            font-size: 20px;
+            text-shadow: none;
+
+            &:hover {
+                background: #edf2f7;
+                color: #1b3a6b;
+            }
+        }
+    }
+
+    // the PopupLayout wrapper adds its own padding; zeroed so the body/footer
+    // below control spacing on both popup kinds
+    .mx-window-body {
+        padding: 0;
+    }
+
+    .mx-dialog-body {
+        padding: 22px;
+        color: #3f5069;
+        font-size: 14.5px;
+
+        p {
+            margin: 0;
+        }
+    }
+
+    .mx-dialog-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 22px;
+        border-top: 1px solid #e9eff5;
+        background: #f7fafc;
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 42px;
+            min-width: 88px;
+            margin: 0;
+            padding: 0 20px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-size: 14.5px;
+            font-weight: 700;
+        }
+
+        // OK confirms the delete — the reference gives destructive confirms the
+        // same weight as a submit, so it takes the brand gradient.
+        .btn-primary {
+            order: 2;
+            border-color: transparent;
+            background-color: #1478b0;
+            background-image: linear-gradient(135deg, #22a7d0 0%, #14639f 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(20, 99, 159, 0.3);
+
+            &:hover,
+            &:focus {
+                filter: brightness(1.06);
+                color: #ffffff;
+            }
+        }
+
+        .btn:not(.btn-primary) {
+            order: 1;
+            border-color: #d3dde8;
+            background: #ffffff;
+            color: #46586e;
+
+            &:hover,
+            &:focus {
+                background: #f2f6fa;
+                color: #46586e;
+            }
+        }
+    }
+}
+
+// =============================================================================
+//  Application loader. Mendix's .mx-progress is a small centred card (not a
+//  full-screen overlay), so the layout is left untouched — only a blurred dim
+//  backdrop is added behind it via a fixed pseudo-element, and the indicator's
+//  bar is swapped for a self-animating spinner. opacity is forced to 1 so the
+//  backdrop-filter is not disabled by the card's default 0.8 group opacity.
+// =============================================================================
+
+// Scoped to the SHOWN state only. Mendix hides the idle loader with
+// .mx-progress-hidden { opacity: 0 }; targeting :not(.mx-progress-hidden) means
+// the backdrop and full opacity apply only while loading, and the fixed
+// backdrop never exists (nor blocks clicks) when the app is idle.
+.mx-progress:not(.mx-progress-hidden) {
+    opacity: 1 !important;
+
+    // Atlas draws the loader as a 250px white box with 20px of padding and a
+    // 4px radius (theme.compiled.css: .mx-progress background #fff) — which is
+    // the pale slab that shows up behind the spinner. Only the spinner should
+    // be visible over the dimmed page, so the box itself is cleared away.
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+    background: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+
+    // if the runtime does send a message with the loader, it has to read
+    // against the dimmed page rather than Atlas's navy-on-white
+    .mx-progress-message {
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(15, 39, 67, 0.45);
+    }
+
+    &::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background: rgba(15, 39, 67, 0.32);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+}
+
+.mx-progress-indicator {
+    width: 46px !important;
+    max-width: 46px !important;
+    height: 46px !important;
+    background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='20' fill='none' stroke='%23e3ecf4' stroke-width='5'/%3E%3Ccircle cx='25' cy='25' r='20' fill='none' stroke='%231478b0' stroke-width='5' stroke-linecap='round'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 25 25' to='360 25 25' dur='1s' repeatCount='indefinite'/%3E%3Canimate attributeName='stroke-dasharray' values='1 150;90 60;1 150' dur='1.4s' repeatCount='indefinite'/%3E%3Canimate attributeName='stroke-dashoffset' values='0;-35;-125' dur='1.4s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E") center / 46px 46px no-repeat !important;
+
+    &::before,
+    &::after {
+        display: none !important;
+    }
+}
+
+// =============================================================================
+//  Reference frame — the ground and the margins the four pages sit in
+//
+//  R:\Bahri Design as website\assets\styles.css draws the page as
+//      body     { background: #EEF3F8 }
+//      .shell   { display:flex; align-items:flex-start; gap:22px; padding:22px }
+//      .content { flex:1; min-width:0; max-width:1180px; margin:0 auto }
+//  so the card column is 1180px wide, centred in whatever is left of the page
+//  beside the rail, with a 22px margin at the page edge — which leaves exactly
+//  as much air between the rail and the card as between the card and the right
+//  edge, at every width.
+//
+//  The service pages render inside the dashboard layout (they carry
+//  .gs-bahri-layout too), which paints the page white and gives the content
+//  area a padding clamped to the viewport — ≈47px left but ≈57px right at
+//  1462px, so the column sat off-centre. Both are restated here, at the same
+//  nesting depth, which wins because main.scss now loads this file after
+//  atom-gs.scss and its responsive layer, and only ever inside
+//  .gs-service-page — the dashboard and its left navigation are untouched.
+// =============================================================================
+
+.gs-service-page {
+
+    // The page's own ground. .gs-bahri-layout paints the dashboard white; the
+    // reference's body is #EEF3F8, which is what lifts the white cards off it.
+    background: #eef3f8;
+
+    // The reference's 22px page margin, applied to the content side only, so
+    // the left navigation keeps the position and size it has on the dashboard.
+    //
+    // `height: auto; overflow: visible` gives the page a single scrollbar:
+    // atom-gs pins this area to height:100% with overflow:auto, which on these
+    // long forms nests a second scroller inside the page's own — two scrollbars,
+    // a wheel that stops at the inner edge, and no way for anything inside to
+    // stay put while the rest scrolls.
+    .gs-main-layout .gs-content-area {
+        height: auto;
+        overflow: visible;
+        padding: 22px;
+    }
+
+    // .content carries no padding of its own in the reference; the 8px top and
+    // 24px bottom here come from the dashboard's page wrapper.
+    .employees-layout {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    // ------------------------------------------------------ sticky page head
+    // The header block sits straight on the frame and the reference leaves
+    // 20px between it and the first card. Atlas's spacing design properties on
+    // this container (`spacing-outer-top` / `-bottom`, 8px each) declare
+    // themselves !important, which is the only reason to do so here.
+    //
+    // It then stays with the reader: pinned under the app header (101px) and
+    // its ticker (40px), so the request's name, its status chip and the page
+    // it belongs to are still on screen at the bottom of a long form.
+    //
+    // At rest it must look exactly as it did — so the 12px of air the bar
+    // needs once it is stuck is padding cancelled by an equal negative margin,
+    // and the 20px down to the first card is what is left of the margin
+    // (12 + 8). Nothing about the header's height changes as it sticks, so the
+    // form below never jumps.
+    // A sticky element can only travel inside its own parent's box, and on
+    // every one of these pages the header is wrapped in a data view (two of
+    // them on Drivers, Catering and Absence) that is exactly as tall as the
+    // header itself — 85px of travel, which reads as "not sticky at all".
+    // Those wrappers hold nothing but the header, so removing their boxes
+    // costs nothing and hands the header to the page-tall container it should
+    // have been measured against.
+    .mx-dataview:has(.pageheader.gs-svc-head),
+    .mx-dataview-content:has(.pageheader.gs-svc-head) {
+        display: contents;
+    }
+
+    .gs-svc-head {
+        position: sticky;
+        top: 141px;
+        z-index: 4;
+        // Air on every side, cancelled by an equal negative margin on every
+        // side: the title still starts on the cards' left edge and the chip
+        // still ends on their right, while the surface itself reaches 16px
+        // past them. What is left of the bottom margin (12 + 8) is the 20px
+        // down to the first card.
+        padding: 12px 16px;
+        margin-top: -12px !important;
+        margin-right: -16px !important;
+        margin-bottom: 8px !important;
+        margin-left: -16px !important;
+        // `.pageheader` pins this to width:100%, which would make the negative
+        // margins slide the bar left instead of widening it by 16px a side.
+        width: auto;
+        border-radius: 14px;
+        background-color: rgba(247, 250, 252, 0);
+        box-shadow: 0 0 0 0 rgba(15, 39, 67, 0);
+        // the fallback path for browsers without scroll-driven animations:
+        // nothing fades in, the header simply stays put
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    // The bar only earns its surface once the page is actually scrolled: it
+    // fades in over the first 64px and fades back out on the way up. A
+    // scroll-driven animation does this on the compositor, so there is no
+    // scroll listener and no jitter; where it is unsupported the header is
+    // still sticky, just always transparent.
+    @supports (animation-timeline: scroll()) {
+        .gs-svc-head {
+            animation: gs-svc-head-stuck linear both;
+            animation-timeline: scroll(nearest);
+            animation-range: 0 64px;
+        }
+    }
+
+    // The reference parts its sections with a full-width hairline and 26px of
+    // air either side of it (styles.css: .sect{padding:26px 30px;border-bottom}
+    // with .sect:last-child{border-bottom:none}). Here the sections are heading
+    // rows inside one padded body, so the rule is drawn above each heading that
+    // follows a row of fields — which is every heading but the first.
+    .gs-svc-fields>.items-row+.gs-svc-sect,
+    .gs-svc-fields>.gs-svc-field-wide+.gs-svc-sect {
+        margin-top: 8px;
+        padding-top: 26px;
+        border-top: 1px solid #e9eff5;
+    }
+}
+
+
+// What the header fades to once the page is scrolled: the reference's own
+// card surface, frosted so the form reads through it, with its hairline and
+// shadow. Only paint properties are animated — nothing here changes the
+// header's size, so the scroll position cannot drift while it plays.
+@keyframes gs-svc-head-stuck {
+    to {
+        background-color: rgba(247, 250, 252, 0.86);
+        backdrop-filter: blur(10px) saturate(1.4);
+        -webkit-backdrop-filter: blur(10px) saturate(1.4);
+        box-shadow:
+            0 1px 0 0 #e9eff5,
+            0 10px 24px -8px rgba(15, 39, 67, 0.16);
+    }
+}
+
+// Anything the client scrolls to on these pages — the first field that fails
+// validation, a deep link to a section — stops below the pinned header rather
+// than under it. 141px of app chrome + the header bar + a little air. These
+// pages scroll the document itself; the wrapper is named too for the layouts
+// that put the page in a scroll container instead.
+html:has(.gs-service-page),
+.mx-scrollcontainer-wrapper:has(.gs-service-page) {
+    scroll-padding-top: 250px;
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    html:has(.gs-service-page),
+    .mx-scrollcontainer-wrapper:has(.gs-service-page) {
+        scroll-behavior: auto;
+    }
+}
+
+.cybersecurity-modalss{
+    padding: 24px;
+}
+
+.confirmationpopup-gs{
+    
+}
+// =============================================================================
+//  Radio buttons — one control, everywhere in the app
+//
+//  Deliberately NOT scoped to .gs-service-page: a radio should read the same
+//  on a request form, in a settings dialog and in a pop-up, and before this
+//  every screen drew its own (Atlas's default dot here, a segmented pill
+//  there, the browser's native circle somewhere else).
+//
+//  The native input is restyled rather than hidden, so it keeps its own
+//  keyboard behaviour, its focus ring and its accessible name. The mark is a
+//  brand-gradient core that springs in past its final size and settles, with a
+//  ring that pulses out from the control at the moment of the choice.
+//
+//  Opt out on a control that has to keep the browser's own: add `gs-radio-raw`
+//  to the input, or to anything above it.
+// =============================================================================
+
+input[type='radio']:not(.gs-radio-raw):not(.gs-radio-raw *) {
+    // Several screens already dressed their radios up — a 40px disc here, a
+    // dot of their own there — and those rules are both specific and older, so
+    // without !important two marks end up drawn on top of each other. The
+    // geometry is forced; everything cosmetic below is left ordinary.
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    position: relative;
+    flex: none;
+    display: inline-block;
+    box-sizing: border-box !important;
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    margin: 0 9px 0 0;
+    padding: 0 !important;
+    border: 1.5px solid #cfdcea !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    box-shadow: none;
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+    // the mark is placed rather than laid out, so no inherited line-height or
+    // display from another stylesheet can push it off centre
+    &::before {
+        content: '' !important;
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 10px !important;
+        height: 10px !important;
+        // the base theme puts a navy border on this very pseudo-element when
+        // the input is checked — the dark ring that was hugging the mark
+        border: 0 !important;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #22a7d0 0%, #14639f 100%) !important;
+        // at rest the mark is nothing; on the way in it arrives as a ring and
+        // closes into a solid dot, like an aperture
+        transform: scale(0);
+        box-shadow: inset 0 0 0 5px #ffffff;
+        opacity: 0;
+        transition:
+            transform 0.26s cubic-bezier(0.2, 1.55, 0.35, 1),
+            box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.25, 1) 0.05s,
+            opacity 0.16s ease;
+    }
+
+    // whatever second mark another stylesheet drew, there is one now
+    &::after {
+        content: none !important;
+        display: none !important;
+    }
+
+    &:hover:not(:disabled) {
+        border-color: #a8c2da;
+        box-shadow: 0 0 0 4px rgba(34, 167, 208, 0.1);
+    }
+
+    // a hint of the mark before it is chosen — the control answers the pointer
+    &:hover:not(:checked):not(:disabled)::before {
+        transform: scale(0.42);
+        opacity: 0.32;
+    }
+
+    // pressing it gives a little
+    &:active:not(:disabled) {
+        scale: 0.92;
+    }
+
+    &:checked {
+        border-color: #1478b0 !important;
+        // the ring that radiates out of the control at the moment of the choice
+        animation: gs-radio-pulse 0.5s ease-out;
+
+        &::before {
+            transform: scale(1);
+            box-shadow: inset 0 0 0 0 #ffffff; // the ring closes into the dot
+            opacity: 1;
+        }
+    }
+
+    // Bootstrap gives a focused radio `outline: 5px auto -webkit-focus-ring-color`
+    // with `outline-offset: -2px` — a heavy ring pulled INSIDE the control, which
+    // is the dark band that appeared between the edge and the mark the moment one
+    // was clicked. Ours sits outside the control instead, and only for the
+    // keyboard: a pointer already says where it is.
+    &:focus {
+        outline: none !important;
+        outline-offset: 0 !important;
+    }
+
+    &:focus-visible {
+        outline: none !important;
+        box-shadow: 0 0 0 4px rgba(34, 167, 208, 0.28);
+    }
+
+    &:disabled {
+        border-color: #e3ecf4 !important;
+        background: #f7fafc !important;
+        cursor: not-allowed;
+
+        &::before {
+            background: #a7b6c7;
+        }
+    }
+}
+
+@keyframes gs-radio-pulse {
+    from { box-shadow: 0 0 0 0 rgba(20, 99, 159, 0.3); }
+    to   { box-shadow: 0 0 0 11px rgba(20, 99, 159, 0); }
+}
+
+// The option's own text, in both shapes Mendix renders: input beside its label,
+// and input wrapped inside it.
+input[type='radio']:not(.gs-radio-raw) + label,
+.radio > label:has(> input[type='radio']) {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1b3a6b;
+    cursor: pointer;
+    transition: color 0.18s ease;
+}
+
+// the chosen option says so twice — the mark, and its own weight
+input[type='radio']:not(.gs-radio-raw):checked + label,
+.radio > label:has(> input[type='radio']:checked) {
+    color: #14639f;
+    font-weight: 600;
+}
+
+input[type='radio']:disabled + label,
+.radio > label:has(> input[type='radio']:disabled) {
+    color: #8094ac;
+    cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    input[type='radio']:not(.gs-radio-raw) {
+        animation: none !important;
+
+        &::before {
+            transition: opacity 0.12s ease;
+        }
+
+        &:checked::before {
+            transform: scale(1);
+            box-shadow: none;
+        }
+
+        &:active:not(:disabled) {
+            scale: 1;
+        }
+    }
+}
+
+// The stepped value rolls in from the side it was stepped from — set by
+// gs-svc-clock.js, which tags the counter it saw change.
+@keyframes gs-count-up {
+    from { transform: translateY(38%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes gs-count-down {
+    from { transform: translateY(-38%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+.rdtCount.gs-count-up {
+    animation: gs-count-up 0.26s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.rdtCount.gs-count-down {
+    animation: gs-count-down 0.26s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rdtCount.gs-count-up,
+    .rdtCount.gs-count-down {
+        animation: none;
+    }
+}
+
+// ============================================================================
+//  Absence history dialog — the page's own overlay, in the language of the
+//  app's other pop-ups: the page dimmed and blurred behind it, the card lifted
+//  on a deep shadow, dismissed by the close button, Escape or the backdrop.
+// ============================================================================
+
+html.gs-hist-open {
+    overflow: hidden; // the page underneath stays where it was
+}
+
+.gs-hist-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(15, 39, 67, 0.32);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: gs-hist-fade 0.2s ease both;
+}
+
+// The card itself never scrolls — its rounded frame clips instead, and the
+// list inside is the scroller. A scrollbar on the card would be drawn against
+// its border edge, which is what left it hanging outside the rounded corner.
+.gs-hist-backdrop .absence-2-c {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: min(560px, 100%);
+    max-height: min(74vh, 680px);
+    overflow: hidden;
+    padding: 22px 24px 20px !important;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 24px 70px rgba(15, 39, 67, 0.22);
+    animation: gs-hist-rise 0.24s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+
+.gs-hist-backdrop .absence-2-c > .mx-text:first-child {
+    flex: none;
+    margin-bottom: 10px !important;
+    padding-right: 40px; // clear of the close button
+}
+
+.gs-hist-backdrop .absence-2-c .mx-listview {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    // the scrollbar sits inside the card's padding rather than on its edge
+    margin-right: -10px;
+    padding-right: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #cfdcea transparent;
+}
+
+.gs-hist-backdrop .absence-2-c .mx-listview::-webkit-scrollbar {
+    width: 6px;
+}
+
+.gs-hist-backdrop .absence-2-c .mx-listview::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: #cfdcea;
+}
+
+.gs-hist-backdrop .absence-2-c .mx-listview::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.gs-hist-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 2;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background-color: transparent;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6b80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 17px 17px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.gs-hist-close:hover {
+    background-color: #eef3f8;
+    border-color: #dce5ee;
+}
+
+.gs-hist-close:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(34, 167, 208, 0.26);
+}
+
+@keyframes gs-hist-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes gs-hist-rise {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to   { opacity: 1; transform: none; }
+}
+
+// transform only — the client owns opacity on its own dialogs
+@keyframes gs-dialog-rise {
+    from { transform: translateY(10px) scale(0.985); }
+    to   { transform: none; }
+}
+
+@keyframes gs-hist-fall {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateY(8px) scale(0.985); }
+}
+
+// leaving: the card settles back and the page comes into focus behind it
+.gs-hist-backdrop.is-closing {
+    animation: gs-hist-fade 0.18s ease reverse both;
+}
+
+.gs-hist-backdrop.is-closing .absence-2-c {
+    animation: gs-hist-fall 0.18s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gs-hist-backdrop,
+    .gs-hist-backdrop .absence-2-c {
+        animation: none;
+    }
+}
+
+// ============================================================================
+//  Absence history entries
+//
+//  Kept OUT of the .gs-service-page scope on purpose: the dialog moves this
+//  card onto <body>, and anything scoped to the page would stop applying the
+//  moment it opened.
+// ============================================================================
+
+// Each entry is a title, a date range and a status, and the first two are
+// sibling spans — so the range ran on straight after the title and wrapped
+// mid-sentence. They are stacked here into a proper two-line entry, led by
+// a tile that carries the outcome as an icon and colour, with the status
+// itself as a chip on the right. The state classes (cr-approve / cr-pending
+// / cr-rejected) are the model's own, set on the status text.
+.absence-2-c {
+    .mx-listview > ul > li {
+        padding: 0;
+        border: 0;
+        background: none;
+
+        + li {
+            border-top: 1px solid #eef3f8;
+        }
+    }
+
+    .spread-tb {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 13px 2px;
+
+        // the outcome, as an icon tile
+        &::before {
+            content: '';
+            display: flex;
+            flex: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            background-color: #eef3f8;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 19px 19px;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a6206' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.4V12l3 1.8'/%3E%3C/svg%3E");
+        }
+
+        // title over date range, rather than side by side
+        > div:first-of-type {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+
+            > * {
+                display: block;
+                margin: 0;
+            }
+
+            // the leave type
+            > *:not(:last-child) {
+                font-size: 14.5px;
+                font-weight: 700;
+                line-height: 1.35;
+                color: #123a63;
+            }
+
+            // the dates it covers
+            > *:last-child {
+                font-size: 12.5px;
+                font-weight: 500;
+                line-height: 1.35;
+                color: #8094ac;
+                font-variant-numeric: tabular-nums;
+            }
+
+            // an entry with nothing but a title still reads as one
+            > *:only-child {
+                font-size: 14.5px;
+                font-weight: 700;
+                color: #123a63;
+            }
+        }
+    }
+
+    // the tile takes the colour of the outcome
+    .spread-tb:has(.cr-approve)::before {
+        background-color: #e8f6ee;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23157f4b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='4.5' width='17' height='16' rx='2.5'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3.5 9.5h17'/%3E%3Cpath d='m9.2 14.6 2 2 3.6-3.8'/%3E%3C/svg%3E");
+    }
+
+    .spread-tb:has(.cr-rejected)::before {
+        background-color: #fdecea;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b42318' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3.5' y='4.5' width='17' height='16' rx='2.5'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3.5 9.5h17'/%3E%3Cpath d='m10 13.6 4 4M14 13.6l-4 4'/%3E%3C/svg%3E");
+    }
+
+    .spread-tb:has(.cr-pending)::before {
+        background-color: #fdf3e2;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a6206' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M12 7.4V12l3 1.8'/%3E%3C/svg%3E");
+    }
+
+    // the status itself, as a chip
+    .cr-status {
+        flex: none;
+        align-self: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 11px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+
+        &::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+    }
+
+    .cr-approve {
+        background: #e8f6ee;
+        border-color: rgba(21, 127, 75, 0.22);
+        color: #157f4b;
+    }
+
+    .cr-pending {
+        background: #fdf3e2;
+        border-color: rgba(154, 98, 6, 0.22);
+        color: #9a6206;
+    }
+
+    .cr-rejected {
+        background: #fdecea;
+        border-color: rgba(180, 35, 24, 0.22);
+        color: #b42318;
+    }
+}
+
+
+// ============================================================================
+//  One arrival for every dialog
+//
+//  The Absence history dialog set the pattern — the page dimmed and blurred,
+//  the card rising a little as it fades in — and every other pop-up on these
+//  pages is a Mendix window or dialog on <body> (attachment upload, the
+//  success messages, the confirmation prompts). They all arrive the same way
+//  now. Mendix removes a dialog's node the moment it closes, so the leaving
+//  half stays instant, exactly as the history dialog behaves.
+// ============================================================================
+
+// Mendix's own backdrop is a flat #333, faded in and out by the client itself
+// (mxui.widget.Underlay animates this element's inline opacity to 0.5 on open
+// and back to 0 on close, orphaning the node only once that finishes).
+//
+// So the dim must NOT be pinned here: forcing `opacity: 1` left the backdrop
+// at full strength for the whole of the closing fade and only then cut away —
+// the jump on close. The dim lives in the colour instead (0.64 read at the
+// client's 0.5 gives the 0.32 the dialogs are designed against) and the
+// element's opacity is left to the client to animate.
+.mx-underlay {
+    background-color: rgba(15, 39, 67, 0.64) !important;
+    // a little heavier than the 4px elsewhere: at 50% composite it reads the same
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    // NO transition on opacity: the client writes this property frame by frame
+    // (dojo fadeIn / fadeOut), and a transition re-eases every one of those
+    // writes, so the backdrop lagged behind its own fade and was still on
+    // screen when the node was taken away.
+}
+
+// The client fades these itself — every dialog is built at inline opacity 0 and
+// animated in and out over ~350ms by dojo. So opacity is left entirely alone
+// here: this adds the rise and nothing else, with `backwards` so the transform
+// fills only before it runs. Touching opacity, by animation or by transition,
+// is what made the closing fade stutter and then snap.
+.modal-dialog.mx-dialog,
+.modal-dialog.mx-window,
+.mx-window.request-popups,
+.mx-window.testing {
+    animation: gs-dialog-rise 0.26s cubic-bezier(0.2, 0.8, 0.25, 1) backwards;
+}
+
+// The date picker's panel is a pop-up of its own — it gets the rise, without
+// the backdrop, since it hangs off its field rather than covering the page.
+.ant-picker-dropdown {
+    animation: gs-dialog-rise 0.18s cubic-bezier(0.2, 0.8, 0.25, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mx-underlay,
+    .modal-dialog.mx-dialog,
+    .modal-dialog.mx-window,
+    .mx-window.request-popups,
+    .mx-window.testing,
+    .ant-picker-dropdown {
+        animation: none;
+    }
+}

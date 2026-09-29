@@ -1,0 +1,122 @@
+// =============================================================================
+//  mx-client.scss — the sliver of the Mendix CLIENT stylesheet this app needs
+//
+//  index.html loads the two stylesheets copied out of the Mendix deployment
+//  (widgets/widgets.css and theme.compiled.css) but NOT mxclientsystem's own
+//  ui.css, which is served by the runtime rather than built into the theme.
+//  Almost nothing here needed it — Atlas covers .mx-dataview, .mx-listview,
+//  .mx-layoutgrid, .mx-progress and the rest — with one exception: pop-up
+//  windows and dialogs, which the client positions itself.
+//
+//  So this file is not theme code and nothing in it is a design decision: it
+//  restates what the client does for .mx-window / .mx-dialog, and no more.
+//  atom-service-gs.scss then styles them exactly as it styles them in Mendix.
+//
+//  It loads FIRST, which is where the client's stylesheet sits in Mendix, so
+//  every theme rule still wins over it.
+// =============================================================================
+
+// The client builds a window as `.modal-dialog.mx-window` on <body> and gives
+// it an inline width (600px is its default, which atom-service-gs.scss quotes
+// when it overrides it for the success pop-up) and an inline top/left that
+// centres it in the viewport. Restated here, because none of that inline
+// positioning exists without the client.
+//
+// Centred with `translate`, NOT `transform`. Two reasons:
+//   - `inset: 0; margin: auto` only centres a box whose height resolves, and
+//     atom-service-gs.scss pins the success pop-up to `height: auto !important`
+//     — which, with top and bottom both at 0, stretches it to the full viewport
+//     and leaves the message sitting at the top.
+//   - `transform` is already spoken for: the arrival animation gs-dialog-rise
+//     animates transform and ends on `none`, so a transform used for centring
+//     would be wiped out the moment it finished.
+// `translate` is a separate property, so the two compose instead of fighting —
+// the same trick the theme uses for the clock hands (`rotate: var(…)`).
+//
+// The class is repeated so this outranks the theme's own `.mx-window.<page>`
+// rules; this file loads before theme.compiled.css, so a tie on specificity
+// would go to the theme.
+.modal-dialog.mx-window.mx-window,
+.modal-dialog.mx-dialog.mx-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    translate: -50% -50%;
+    z-index: 1001; // above .mx-underlay, which the theme puts at 1000
+    width: 600px;
+    max-width: 92vw;
+    max-height: 92vh;
+    margin: 0;
+    overflow: auto;
+}
+
+.mx-window-content,
+.mx-dialog-content {
+    background: #ffffff;
+    border-radius: 4px;
+}
+
+.mx-window-header,
+.mx-dialog-header {
+    position: relative;
+}
+
+.mx-window-body {
+    padding: 16px;
+}
+
+// NOTE: there is deliberately no rule here for .toggle-password-button.
+// The eye sitting low on the password field was a DOM fault, not a styling one
+// - the button belongs INSIDE the .form-group, and the group needs `no-columns`
+// so Bootstrap's horizontal-form rules do not float the label out of flow above
+// 768px. Both are fixed in the markup (LoginPage.jsx, MxForm.jsx), which leaves
+// the widget's own `top` offset measuring from the right box and correct at
+// every width. An override here would only mask a future recurrence.
+
+// The client's message bar, which `show message` raises. Atlas styles the
+// alert itself; only the stack's position belongs to the client.
+.mx-messages {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 420px;
+}
+
+.mx-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0;
+    box-shadow: 0 10px 30px rgba(15, 39, 67, 0.18);
+
+    > span {
+        flex: 1;
+    }
+}
+
+// The loader is a centred card in the client, which is the shape
+// atom-service-gs.scss restyles ("a small centred card, not a full-screen
+// overlay") — so it is centred here and left alone otherwise.
+.mx-progress {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    height: fit-content;
+    width: fit-content;
+    margin: auto;
+}
+
+.mx-progress-hidden {
+    display: none;
+}
